@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [editName, setEditName] = useState('');
   const [editLink, setEditLink] = useState('');
   const [alertInfo, setAlertInfo] = useState('');
+  const [copySuccess, setCopySuccess] = useState('');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -154,6 +155,29 @@ export default function DashboardPage() {
     }
   }, [loading, user, router]);
 
+  const copyToClipboard = () => {
+    if (userProfile?.username) {
+      // Bangun URL lengkap
+      // window.location.origin akan mengambil domain saat ini (misal: http://localhost:3000 atau https://simplink.vercel.app)
+      const publicUrl = `${window.location.origin}/${userProfile.username}`;
+
+      navigator.clipboard.writeText(publicUrl).then(
+        () => {
+          // Berhasil disalin
+          setCopySuccess('Tautan berhasil disalin!');
+          // Hapus pesan setelah beberapa detik
+          setTimeout(() => setCopySuccess(''), 2000);
+        },
+        (err) => {
+          // Gagal disalin (jarang terjadi, mungkin karena izin browser)
+          console.error('Gagal menyalin: ', err);
+          setCopySuccess('Gagal menyalin.');
+          setTimeout(() => setCopySuccess(''), 2000);
+        }
+      );
+    }
+  };
+
   if (loading || !user) {
     // Tampilkan Skeleton UI
     return (
@@ -178,20 +202,38 @@ export default function DashboardPage() {
           <span>{alertInfo.message}</span>
         </div>
       )}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          {userProfile?.username && <p className="text-neutral-500 text-sm mt-1">Selamat Datang, @{userProfile.username}!</p>}
+      <div className="flex flex-col gap-4 mb-4">
+        {/* Baris 1: Judul Dashboard */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            {userProfile?.username && <p className="text-neutral-500 text-sm mt-1">Selamat Datang, @{userProfile.username}!</p>}
+          </div>
+
+          {/* Tombol Lihat Halaman Publik*/}
+          <div>
+            {userProfile?.username && (
+              <Link href={`/${userProfile.username}`} className="btn btn-outline btn-primary btn-sm rounded-lg" rel="noopener noreferrer">
+                Lihat Halaman Publikmu ✨
+              </Link>
+            )}
+          </div>
         </div>
 
-        <div>
-          {userProfile?.username && (
-            <Link href={`/${userProfile.username}`} className="btn btn-outline btn-primary btn-sm rounded-lg" rel="noopener noreferrer">
-              Lihat Halaman Publikmu ✨
-            </Link>
-          )}
-        </div>
+        {/* Baris 2: URL Publik & Tombol Salin */}
+        {userProfile?.username && (
+          <div className="p-4 bg-base-200 rounded-lg flex items-center justify-between gap-2">
+            <div className="overflow-hidden">
+              <p className="text-sm font-medium">URL Publik Anda:</p>
+              <span className="text-primary font-mono text-sm break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/${userProfile.username}`}</span>
+            </div>
+            <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-lg" onClick={copyToClipboard}>
+              {copySuccess ? 'Tersalin!' : 'Salin'}
+            </button>
+          </div>
+        )}
       </div>
+
       <section className=" flex flex-col md:flex-row gap-6">
         <div className="card bg-base-100 shadow-md flex-1 md:order-1">
           <form onSubmit={handleSubmit} className="card-body">
@@ -225,19 +267,16 @@ export default function DashboardPage() {
               <ul className="space-y-2">
                 {/* space-y untuk jarak */}
                 {links.map((link) => (
-                  <li className="flex items-center justify-between py-2 border-b border-base-300 last:border-b-0" key={link.id}>
-                    {/* Info Link */}
-                    <div className="overflow-hidden mr-2">
-                      <a
-                        className="font-medium text-primary hover:underline truncate block"
-                        href={link.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={link.link} // Tooltip jika link panjang
-                      >
+                  <li
+                    // Tetap sebagai flex container
+                    className="grid grid-cols-[1fr_auto] items-center gap-4 py-2 border-b border-base-300 last:border-b-0"
+                    key={link.id}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <a href={link.link} target="_blank" rel="noopener noreferrer" title={link.link} className="block w-full truncate font-medium text-primary hover:underline text-sm">
                         {link.name}
                       </a>
-                      <span className="text-xs text-gray-500 truncate block">{link.link}</span>
+                      <p className="block w-full truncate text-xs text-gray-500">{link.link}</p>
                     </div>
 
                     <div className="flex space-x-1 flex-shrink-0">

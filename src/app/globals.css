@@ -1,8 +1,4 @@
 @import 'tailwindcss';
 
 /* Muat plugin daisyUI dan konfigurasikan tema di sini */
-@plugin "daisyui" {
-    @daisyui {
-        themes: ["cupcake", "dracula"];
-    }
-}
+@plugin "daisyui";

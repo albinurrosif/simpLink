@@ -28,6 +28,17 @@ export default function RegisterPage() {
     event.preventDefault(); // Mencegah reload form
     if (loading) return;
 
+    if (!username || username.length < 3 || username.length > 20) {
+      setAlertInfo({ type: 'error', message: 'Username harus antara 3 dan 20 karakter.' });
+      return; // Hentikan proses jika tidak valid
+    }
+    // Opsional: Cek karakter yang valid (misal hanya huruf, angka, underscore)
+    const validUsernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!validUsernameRegex.test(username)) {
+      setAlertInfo({ type: 'error', message: 'Username hanya boleh berisi huruf, angka, dan underscore.' });
+      return;
+    }
+
     setLoading(true);
     setAlertInfo(null);
     console.log('form data:', { email, password });
