@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/authcontext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import GoogleAnalytics from './components/GoogleAnalytics';
 import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
           <main className="flex-grow max-w-4xl mx-auto p-4 w-full flex items-center justify-center">{children}</main>
           <Footer />
         </AuthProvider>
-        <GoogleAnalytics gaId="G-W82L36K240" />
+        <GoogleAnalytics />
       </body>
     </html>
   );
