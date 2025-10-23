@@ -13,7 +13,7 @@ export default function Home() {
       <div className="hero-content text-center">
         <div className="max-w-md">
           {/* Judul Utama */}
-          <h1 className="text-5xl font-bold text-primary">SimpLink</h1>
+          <h1 className="text-5xl font-bold text-primary">KumpuLink</h1>
           {/* Deskripsi Singkat */}
           <p className="py-6">Satu link sederhana untuk semua konten penting Anda. Bagikan portofolio, media sosial, dan lainnya dengan mudah.</p>
           {/* Tombol Call to Action (CTA) */}

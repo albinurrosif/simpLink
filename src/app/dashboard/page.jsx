@@ -158,7 +158,7 @@ export default function DashboardPage() {
   const copyToClipboard = () => {
     if (userProfile?.username) {
       // Bangun URL lengkap
-      // window.location.origin akan mengambil domain saat ini (misal: http://localhost:3000 atau https://simplink.vercel.app)
+      // window.location.origin akan mengambil domain saat ini (misal: http://localhost:3000 atau https://KumpuLink.vercel.app)
       const publicUrl = `${window.location.origin}/${userProfile.username}`;
 
       navigator.clipboard.writeText(publicUrl).then(

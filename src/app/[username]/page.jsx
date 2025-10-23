@@ -144,7 +144,7 @@ export default function UserPage({ params }) {
       {/* Footer Branding Link*/}
       <div className="text-center mt-8">
         <Link href="/" className="text-xs text-neutral-500 hover:text-primary">
-          Powered by SimpLink
+          Powered by KumpuLink
         </Link>
       </div>
     </div>

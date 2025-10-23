@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'SimpLink',
-  description: 'Your simple link-in-bio solution',
+  title: 'Kumpulink',
+  description: 'Kumpulink - Link Bio Sederhana Anda',
   verification: { google: 'FMrUmPZzKPul48fYnMY8yGvJbZC5hJpp7v1vQ-mjfow' },
 };
 

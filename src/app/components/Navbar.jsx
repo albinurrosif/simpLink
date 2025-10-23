@@ -37,7 +37,7 @@ export default function Navbar() {
       {/* 1. Branding / Logo (Kiri) */}
       <div className="navbar-start">
         <Link href="/" className="btn btn-ghost text-xl">
-          SimpLink
+          KumpuLink
         </Link>
       </div>
 
