@@ -133,8 +133,21 @@ export default function UserPage({ params }) {
       <div className="flex flex-col items-center text-center pt-8 mb-6">
         <div className="avatar mb-4">
           <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-            {/* Using ui-avatars for a placeholder image */}
-            <img src={`https://ui-avatars.com/api/?name=${userProfile?.username}&background=random&color=fff&size=128`} alt={`${userProfile?.username} avatar`} />
+            {userProfile?.photoURL ? (
+              // 1. Jika userProfile.photoURL ADA, tampilkan foto itu
+              <img src={userProfile.photoURL} alt={`${userProfile.username} avatar`} />
+            ) : (
+              // 2. Jika TIDAK ADA, tampilkan placeholder inisial
+              // (Gunakan daisyUI 'placeholder' dengan benar)
+              <div className="avatar placeholder">
+                <div className="bg-neutral text-neutral-content rounded-full w-20">
+                  <span className="text-3xl">
+                    {/* Perbaiki typo: tambahkan '()' */}
+                    <img src={`https://ui-avatars.com/api/?name=${userProfile?.username}&background=random&color=fff&size=128`} alt={`${userProfile?.username} avatar`} />
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <h1 className="text-xl font-semibold text-base-content">@{userProfile?.username}</h1>

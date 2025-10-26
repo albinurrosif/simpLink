@@ -41,6 +41,12 @@ export default function Navbar() {
     setShowLogoutModal(false); // Tutup modal setelah logout
   };
 
+  // Helper untuk mendapatkan inisial
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
+
   // ==================== RENDER LOGIC ====================
 
   return (
@@ -61,53 +67,86 @@ export default function Navbar() {
 
       {/* 2. Link Navigasi (Kanan) */}
       <div className="navbar-end">
-        {/* === Menu untuk Desktop (Terlihat di layar sedang ke atas) === */}
-        <div className="hidden md:flex items-center space-x-2">
-          {user ? (
-            // Jika SUDAH login
-            <>
-              <Link href="/dashboard" className="btn btn-ghost rounded-lg">
-                Dashboard
-              </Link>
-              <button onClick={openLogoutModal} className="btn btn-primary rounded-lg">
-                Logout
-              </button>
-            </>
-          ) : (
-            // Jika BELUM login
-            <>
-              <Link href="/login" className="btn btn-ghost rounded-lg">
-                Login
-              </Link>
-              <Link href="/register" className="btn btn-primary rounded-lg">
-                Register
-              </Link>
-            </>
-          )}
-        </div>
+        {/* === Menu untuk Desktop (JIKA SUDAH LOGIN) === */}
+        {user ? (
+          <div className="dropdown dropdown-end hidden md:flex">
+            {/* Avatar Pengguna sebagai Tombol Dropdown */}
+            <label tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+              <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                {user.photoURL ? (
+                  // Jika punya foto profil (dari Google)
+                  <img alt="User Avatar" src={user.photoURL} />
+                ) : (
+                  // Fallback jika tidak ada foto (misal daftar via email)
+                  <div className="avatar placeholder">
+                    <div className="bg-neutral text-neutral-content rounded-full w-10">
+                      <span>{getInitials(user.email)}</span> {/* Tampilkan inisial email */}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </label>
+            {/* Konten Dropdown Desktop */}
+            <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
+              {/* Perbaikan: Hapus kelas 'btn' dari item menu */}
+              <li>
+                <Link href="/dashboard">Dasbor</Link>
+              </li>
+              <li>
+                <button onClick={openLogoutModal}>Logout</button>
+              </li>
+            </ul>
+          </div>
+        ) : (
+          /* === Menu untuk Desktop (JIKA BELUM LOGIN) === */
+          <div className="hidden md:flex items-center space-x-2">
+            <Link href="/login" className="btn btn-ghost rounded-lg">
+              Login
+            </Link>
+            <Link href="/register" className="btn btn-primary rounded-lg">
+              Register
+            </Link>
+          </div>
+        )}
 
         {/* === Menu Dropdown untuk Mobile (Hanya terlihat di layar kecil) === */}
         <div className="dropdown dropdown-end md:hidden">
-          {/* Tombol Hamburger */}
           <button tabIndex={0} role="button" className="btn btn-ghost btn-circle">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          {/* Konten Dropdown */}
           <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
             {user ? (
-              // Jika SUDAH login
+              // Jika SUDAH login (Mobile)
               <>
+                {/* Tampilkan info user di atas menu */}
+                <li className="menu-title flex flex-row items-center gap-2 p-2">
+                  <div className="avatar w-8 h-8">
+                    <div className="w-8 rounded-full">
+                      {user.photoURL ? (
+                        <img alt="Avatar" src={user.photoURL} />
+                      ) : (
+                        <div className="avatar placeholder">
+                          <div className="bg-neutral text-neutral-content rounded-full w-8">
+                            <span>{getInitials(user.email)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="truncate">{user.displayName || user.email}</span>
+                </li>
+                <div className="divider my-0"></div> {/* Garis pemisah */}
                 <li>
-                  <Link href="/dashboard">Dashboard</Link>
+                  <Link href="/dashboard">Dasbor</Link>
                 </li>
                 <li>
                   <button onClick={openLogoutModal}>Logout</button>
                 </li>
               </>
             ) : (
-              // Jika BELUM login
+              // Jika BELUM login (Mobile)
               <>
                 <li>
                   <Link href="/login">Login</Link>

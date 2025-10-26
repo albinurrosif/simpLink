@@ -122,48 +122,65 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setAlertInfo(null);
-    const provider = new GoogleAuthProvider();
-
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user; // Data dari Google/Firebase Auth
-
-      //  Cek Firestore untuk profil & username
-      const userDocRef = doc(db, 'users', user.uid); // Referensi ke dokumen user
-      const docSnap = await getDoc(userDocRef); // Coba baca dokumen
-
-      if (!docSnap.exists() || !docSnap.data()?.username) {
-        // KASUS 1: Pengguna baru ATAU pengguna lama tanpa username
-        console.log('User document needs username setup.');
-
-        // Jika dokumen belum ada sama sekali, buat dengan email & createdAt
-        if (!docSnap.exists()) {
-          await setDoc(userDocRef, {
-            email: user.email,
-            createdAt: new Date(),
-            // username akan ditambahkan nanti
-          });
-          console.log('Initial user document created.');
-        }
-
-        // Arahkan ke dasbor dengan flag untuk setup username
-        router.push('/dashboard?setupUsername=true');
-      } else {
-        // KASUS 2: Pengguna lama dan sudah punya username
-        console.log('User document found with username:', docSnap.data().username);
-        // Langsung arahkan ke dasbor
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      setAlertInfo({ type: 'error', message: 'Gagal login dengan Google. Coba lagi.' });
-      setGoogleLoading(false);
-    }
-    // Tidak perlu setLoading(false) di sini karena redirect terjadi di try block
-  };
+   const handleGoogleSignIn = async () => {
+     setGoogleLoading(true);
+     setAlertInfo(null);
+     const provider = new GoogleAuthProvider();
+  
+     try {
+       const result = await signInWithPopup(auth, provider);
+       const user = result.user; // Data dari Google/Firebase Auth
+       console.log('Google Sign-In/Up Successful:', user);
+  
+       // === Logika Upsert (Update atau Insert) Data Pengguna ===
+  
+       const userDocRef = doc(db, 'users', user.uid);
+       const docSnap = await getDoc(userDocRef);
+  
+       if (!docSnap.exists()) {
+         // KASUS 1: PENGGUNA BARU
+         // Buat dokumen baru dengan SEMUA data dari Google
+         await setDoc(userDocRef, {
+           email: user.email,
+           photoURL: user.photoURL, // Simpan foto
+           displayName: user.displayName, // Simpan nama tampilan
+           createdAt: new Date(),
+           // username akan disetup di dasbor
+         });
+         console.log('Dokumen pengguna baru dibuat.');
+  
+         // Arahkan ke setup username
+         router.push('/dashboard?setupUsername=true');
+       } else {
+         // KASUS 2: PENGGUNA LAMA
+         // Dokumen sudah ada, cukup update photoURL
+         // (email/pass user atau Google user yg kembali)
+         await updateDoc(userDocRef, {
+           photoURL: user.photoURL, // Update foto profil
+           displayName: user.displayName, // Update nama tampilan
+         });
+         console.log('Profil pengguna diperbarui dengan foto Google.');
+  
+         // Sekarang cek apakah mereka punya username
+         if (docSnap.data()?.username) {
+           // Jika sudah punya username, langsung ke dasbor
+           router.push('/dashboard');
+         } else {
+           // Jika belum punya username, kirim ke setup
+           router.push('/dashboard?setupUsername=true');
+         }
+       }
+     } catch (error) {
+       console.error('Google Sign-In Error:', error);
+       if (error.code === 'auth/account-exists-with-different-credential') {
+         setAlertInfo({ type: 'error', message: 'Email ini sudah terdaftar dengan metode login lain (Email/Password).' });
+       } else {
+         setAlertInfo({ type: 'error', message: 'Gagal login dengan Google. Coba lagi.' });
+       }
+       setGoogleLoading(false);
+     }
+     // Tidak perlu setLoading(false) di sini karena redirect terjadi di try block
+   };
 
   return (
     <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-lg">

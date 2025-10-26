@@ -489,7 +489,7 @@ export default function DashboardPage() {
       )}
       <div className="flex flex-col gap-4 mb-4">
         {/* Baris 1: Judul Dashboard */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-row items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             {userProfile?.username && <p className="text-neutral-500 text-sm mt-1">Selamat Datang, @{userProfile.username}!</p>}
