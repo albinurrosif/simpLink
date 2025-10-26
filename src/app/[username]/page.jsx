@@ -138,8 +138,7 @@ export default function UserPage({ params }) {
           </div>
         </div>
         <h1 className="text-xl font-semibold text-base-content">@{userProfile?.username}</h1>
-
-        {/* <p className="text-sm text-neutral-500 mt-1">{userProfile?.bio || ''}</p> */}
+        {userProfile?.bio && <p className="text-sm text-base-content/80 mt-2 text-center max-w-xs">{userProfile.bio}</p>}
       </div>
       {/* Link Buttons Section */}
       <ul className="w-full space-y-3">
@@ -175,7 +174,7 @@ export default function UserPage({ params }) {
             transition-all duration-300 ease-out
             border-0
             text-sm
-            w-full max-w-xs
+            w-100% max-w-xs
             group
           "
         >

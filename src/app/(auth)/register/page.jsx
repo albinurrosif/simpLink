@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAuth } from '@/context/authcontext';
@@ -23,6 +23,7 @@ export default function RegisterPage() {
   // 🟢 LOADING & UI STATES
   const [loading, setLoading] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // ==================== EFFECTS ====================
   // 🔵 AUTH REDIRECT EFFECT
@@ -121,6 +122,49 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setAlertInfo(null);
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user; // Data dari Google/Firebase Auth
+
+      //  Cek Firestore untuk profil & username
+      const userDocRef = doc(db, 'users', user.uid); // Referensi ke dokumen user
+      const docSnap = await getDoc(userDocRef); // Coba baca dokumen
+
+      if (!docSnap.exists() || !docSnap.data()?.username) {
+        // KASUS 1: Pengguna baru ATAU pengguna lama tanpa username
+        console.log('User document needs username setup.');
+
+        // Jika dokumen belum ada sama sekali, buat dengan email & createdAt
+        if (!docSnap.exists()) {
+          await setDoc(userDocRef, {
+            email: user.email,
+            createdAt: new Date(),
+            // username akan ditambahkan nanti
+          });
+          console.log('Initial user document created.');
+        }
+
+        // Arahkan ke dasbor dengan flag untuk setup username
+        router.push('/dashboard?setupUsername=true');
+      } else {
+        // KASUS 2: Pengguna lama dan sudah punya username
+        console.log('User document found with username:', docSnap.data().username);
+        // Langsung arahkan ke dasbor
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Google Sign-In Error:', error);
+      setAlertInfo({ type: 'error', message: 'Gagal login dengan Google. Coba lagi.' });
+      setGoogleLoading(false);
+    }
+    // Tidak perlu setLoading(false) di sini karena redirect terjadi di try block
+  };
+
   return (
     <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-lg">
       <form onSubmit={handleSubmit} className="card-body">
@@ -138,7 +182,7 @@ export default function RegisterPage() {
           type="text"
           name="username"
           placeholder="Username (1-20 karakter, huruf, angka, -, _)"
-          required // Makes the field mandatory 
+          required // Makes the field mandatory
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           minLength={1} // Minimum length
@@ -150,6 +194,30 @@ export default function RegisterPage() {
         <input className="input input-bordered w-full mb-4" type="password" name="password" placeholder="Password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         <button className="btn btn-primary w-full rounded-lg" type="submit" disabled={loading}>
           {loading ? 'Memproses...' : 'Daftar'}
+        </button>
+        <div className="divider">Atau</div>
+        {/* Google */}
+        <button
+          type="button" // Important: type="button" to prevent form submission
+          className="btn bg-white text-black border-[#e5e5e5] w-full rounded-lg hover:bg-gray-100"
+          onClick={handleGoogleSignIn} // 3. Call the function on click
+          disabled={googleLoading} // Disable while loading
+          formNoValidate
+        >
+          {googleLoading ? (
+            <span className="loading loading-spinner loading-xs"></span>
+          ) : (
+            <svg aria-label="Google logo" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+              <g>
+                <path d="m0 0H512V512H0" fill="#fff"></path>
+                <path fill="#34a853" d="M153 292c30 82 118 95 171 60h62v48A192 192 0 0190 341"></path>
+                <path fill="#4285f4" d="m386 400a140 175 0 0053-179H260v74h102q-7 37-38 57"></path>
+                <path fill="#fbbc02" d="m90 341a208 200 0 010-171l63 49q-12 37 0 73"></path>
+                <path fill="#ea4335" d="m153 219c22-69 116-109 179-50l55-54c-78-75-230-72-297 55"></path>
+              </g>
+            </svg>
+          )}
+          {googleLoading ? 'Memproses...' : 'Lanjutkan dengan Google'}
         </button>
         <p className="text-center mt-4 text-sm">
           Sudah punya akun?{' '}

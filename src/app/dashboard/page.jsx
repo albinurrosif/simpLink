@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/context/authcontext';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 
@@ -10,10 +10,111 @@ import { addDoc, collection, query, where, getDocs, doc, deleteDoc, updateDoc, g
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
+// Komponen Onboarding terpisah
+function OnboardingForm({ user, onUsernameSet }) {
+  const [newUsername, setNewUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (loading) return;
+
+    // 1. Validasi Awal (Panjang & Karakter)
+    const validUsernameRegex = /^[a-zA-Z0-9_\-]+$/;
+    if (newUsername.length < 1 || newUsername.length > 20) {
+      setError('Username harus 1-20 karakter.');
+      return;
+    }
+    if (!validUsernameRegex.test(newUsername)) {
+      setError('Username hanya boleh huruf, angka, underscore (_) dan strip (-)');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 2. Cek Keunikan Username di Firestore
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('username', '==', newUsername));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Username sudah ada
+        setError(`Username "${newUsername}" sudah dipakai orang lain.`);
+        setLoading(false);
+        return;
+      }
+
+      // 3. Update Firestore (jika username unik)
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        username: newUsername,
+      });
+
+      // 4. Beri tahu komponen Dashboard bahwa setup selesai
+      onUsernameSet(newUsername); // Kirim username baru kembali
+    } catch (err) {
+      console.error('Error setting username: ', err);
+      setError('Gagal mengatur username. Coba lagi.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="p-4 flex justify-center items-center">
+      <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-lg">
+        <form onSubmit={handleSubmit} className="card-body">
+          <h1 className="text-2xl font-bold">Selamat Datang!</h1>
+          <p className="text-base-content/70">Pilih username publik Anda untuk menyelesaikan setup.</p>
+
+          {error && (
+            <div role="alert" className="alert alert-error mt-4 p-2 text-sm">
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="form-control py-4">
+            <label className="label">
+              <span className="label-text">Username</span>
+            </label>
+            <div className="join">
+              <span className="btn join-item rounded-l-lg no-animation">kumpulink.com/</span>
+              <input
+                type="text"
+                placeholder="username_anda"
+                className="input input-bordered w-full join-item rounded-r-lg"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                required
+                minLength={1}
+                maxLength={20}
+                pattern="^[a-zA-Z0-9_\-]+$"
+                title="Hanya huruf, angka, strip (-), dan underscore (_)"
+              />
+            </div>
+            <label className="label">
+              <span className="label-text-alt text-warning">Ini akan menjadi URL publik Anda.</span>
+            </label>
+          </div>
+
+          <div className="form-control mt-6">
+            <button type="submit" className="btn rounded-lg btn-primary" disabled={loading}>
+              {loading ? <span className="loading loading-spinner loading-xs"></span> : 'Simpan dan Lanjutkan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}
+
 export default function DashboardPage() {
   // ==================== HOOKS EXTERNAL ====================
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // ==================== STATE MANAGEMENT ====================
   // 🟢 AUTH & LOADING STATES
@@ -41,6 +142,8 @@ export default function DashboardPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [linkToDelete, setLinkToDelete] = useState(null);
   const [showEditUsernameModal, setShowEditUsernameModal] = useState(false);
+  const [isUsernameSetupModal, setIsUsernameSetupModal] = useState(false); // Lacak modal setu
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // 🟢 UI FEEDBACK STATES
   const [alertInfo, setAlertInfo] = useState('');
@@ -90,6 +193,25 @@ export default function DashboardPage() {
       setBio(userProfile.bio);
     }
   }, [userProfile]);
+
+  // Check for username setup flag
+  useEffect(() => {
+    const needsSetup = searchParams.get('setupUsername') === 'true';
+
+    if (needsSetup && user && !userProfile) {
+      // Tunggu userProfile di-fetch
+      return;
+    }
+
+    // Kondisi utama: flag ada DAN user profile sudah ter-load TAPI username-nya KOSONG
+    if (needsSetup && userProfile && !userProfile.username) {
+      console.log('User needs onboarding.');
+      setNeedsOnboarding(true); // <-- ATUR MODE ONBOARDING
+
+      // Hapus query param dari URL
+      router.replace('/dashboard', { scroll: false });
+    }
+  }, [user, userProfile, searchParams, router]);
 
   // 🔵 UI/SIDE EFFECTS
   // Auth redirect if not logged in
@@ -195,8 +317,15 @@ export default function DashboardPage() {
   };
 
   // Open edit username modal
-  const openEditUsernameModal = async () => {
-    setNewUsername(userProfile?.username || '');
+  const openEditUsernameModal = (isSetup = false) => {
+    // Terima parameter opsional
+    if (isSetup) {
+      setIsUsernameSetupModal(true); // Tandai ini sebagai modal setup
+      setNewUsername(''); // Kosongkan, karena ini setup pertama
+    } else {
+      setIsUsernameSetupModal(false); // Ini modal edit biasa
+      setNewUsername(userProfile?.username || ''); // Isi dengan username saat ini
+    }
     setShowEditUsernameModal(true);
   };
 
@@ -333,6 +462,21 @@ export default function DashboardPage() {
     );
   }
 
+  // === BAGIAN BARU: TAMPILKAN ONBOARDING JIKA DIPERLUKAN ===
+  if (needsOnboarding || (userProfile && !userProfile.username)) {
+    return (
+      <OnboardingForm
+        user={user}
+        onUsernameSet={(newUsername) => {
+          // Panggil ini saat onboarding selesai
+          setUserProfile((prev) => ({ ...prev, username: newUsername }));
+          setNeedsOnboarding(false); // Matikan mode onboarding
+          setAlertInfo({ type: 'success', message: 'Setup selesai!' });
+        }}
+      />
+    );
+  }
+
   return (
     <main className="p-4">
       {alertInfo && (
@@ -363,26 +507,29 @@ export default function DashboardPage() {
 
         {/* Baris 2: URL Publik & Tombol Salin */}
         {userProfile?.username && (
-          <div className="p-4 bg-base-200 rounded-lg flex items-center justify-between gap-2">
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium">URL Publik Anda:</p>
+          <div className="bg-base-200 rounded-lg flex flex-col justify-between">
+            <div className="pl-4 pr-4 pt-4 bg-base-200 rounded-lg flex items-center justify-between gap-2">
+              <div className="overflow-hidden">
+                <p className="text-sm font-medium">URL Publik Anda:</p>
 
-              <span className="text-primary font-mono text-sm break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/${userProfile.username}`}</span>
+                <span className="text-primary font-mono text-sm break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/${userProfile.username}`}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <button className="btn btn-sm btn-ghost btn-square text-info hover:bg-info hover:text-info-content  p-0" onClick={openEditUsernameModal} aria-label="Edit Username">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                    />
+                  </svg>
+                </button>
+                <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-lg" onClick={copyToClipboard}>
+                  {copySuccess ? 'Tersalin!' : 'Salin'}
+                </button>
+              </div>
             </div>
-            <div className="flex justify-between gap-2">
-              <button className="btn btn-sm btn-ghost btn-square text-info hover:bg-info hover:text-info-content  p-0" onClick={openEditUsernameModal} aria-label="Edit Username">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                  />
-                </svg>
-              </button>
-              <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-lg" onClick={copyToClipboard}>
-                {copySuccess ? 'Tersalin!' : 'Salin'}
-              </button>
-            </div>
+            <p className="pl-4 pr-4 pb-4 text-xs text-neutral-500 mt-1">Salin tautan ini dan tempelkan di bio media sosial Anda (Instagram, TikTok, dll).</p>
           </div>
         )}
 
@@ -520,14 +667,23 @@ export default function DashboardPage() {
                 <button type="button" className="btn rounded-lg" onClick={() => setShowEditUsernameModal(false)} disabled={usernameCheckLoading}>
                   Batal
                 </button>
+
                 <button type="submit" className="btn rounded-lg btn-primary" disabled={usernameCheckLoading}>
                   {usernameCheckLoading ? <span className="loading loading-spinner loading-xs"></span> : 'Simpan Username'}
                 </button>
               </div>
             </form>
           </div>
+
+          {/* Backdrop: Hanya bisa ditutup jika BUKAN modal setup */}
           <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setShowEditUsernameModal(false)} disabled={usernameCheckLoading}>
+            <button
+              onClick={() => {
+                // Cek kondisi
+                setShowEditUsernameModal(false);
+              }}
+              disabled={usernameCheckLoading}
+            >
               Tutup
             </button>
           </form>
