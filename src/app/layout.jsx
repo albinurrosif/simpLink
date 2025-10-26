@@ -29,8 +29,15 @@ export default function RootLayout({ children }) {
       <body className="flex flex-col min-h-screen antialiased">
         <AuthProvider>
           <Navbar />
-
-          <main className="flex-grow max-w-4xl mx-auto p-4 w-full flex items-center justify-center">{children}</main>
+          <Suspense
+            fallback={
+              <div className="min-h-screen flex items-center justify-center">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
+            }
+          >
+            {children}
+          </Suspense>
           <Footer />
         </AuthProvider>
         <Suspense fallback={null}>
