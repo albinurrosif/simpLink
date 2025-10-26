@@ -138,7 +138,7 @@ export default function RegisterPage() {
           type="text"
           name="username"
           placeholder="Username (1-20 karakter, huruf, angka, -, _)"
-          required // Makes the field mandatory
+          required // Makes the field mandatory 
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           minLength={1} // Minimum length

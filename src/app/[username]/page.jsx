@@ -82,7 +82,7 @@ export default function UserPage({ params }) {
   // ==================== RENDER LOGIC ====================
 
   // Skeleton loading UI
-  if (loading || !userProfile) {
+  if (loading) {
     // Tampilkan Skeleton UI
     return (
       <div className="min-h-screen flex flex-col gap-4 items-center justify-center w-full max-w-sm mx-auto">
@@ -94,17 +94,32 @@ export default function UserPage({ params }) {
     );
   }
 
+  // Cek error SETELAH loading selesai
   if (error) {
-    return <h1>{error}</h1>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1>{error}</h1>
+      </div>
+    );
   }
 
+  // Jika tidak loading DAN tidak error, baru render profil
+  // (Pastikan userProfile ada sebelum mencoba mengakses propertinya di return)
+  if (!userProfile) {
+    // Ini seharusnya tidak terjadi jika error handling benar, tapi sebagai fallback
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1>Profil tidak dapat dimuat.</h1>
+      </div>
+    );
+  }
   return (
     <div className="w-full max-w-xs mx-auto  relative">
       {loggedInUser && loggedInUser.uid === userProfile?.userId && (
         // Posisi absolut relatif terhadap div di atas
         <div className="absolute top-2 right-2 z-10 tooltip" data-tip="Edit halaman">
           <Link href="/dashboard" className="link link-primary" aria-label="Edit Halaman">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
