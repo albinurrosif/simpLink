@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
               </div>
             }
           >
-            {children}
+            <div className="min-h-screen flex items-center justify-center">{children}</div>
           </Suspense>
           <Footer />
         </AuthProvider>
