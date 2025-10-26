@@ -50,14 +50,15 @@ export default function RegisterPage() {
     event.preventDefault(); // Mencegah reload form
     if (loading) return;
 
-    if (!username || username.length < 3 || username.length > 20) {
+    if (!username || username.length < 1 || username.length > 20) {
       setAlertInfo({ type: 'error', message: 'Username harus antara 3 dan 20 karakter.' });
       return; // Hentikan proses jika tidak valid
     }
     // Opsional: Cek karakter yang valid (misal hanya huruf, angka, underscore)
-    const validUsernameRegex = /^[a-zA-Z0-9_]+$/;
+    const validUsernameRegex = /^[a-zA-Z0-9_\-]+$/;
+
     if (!validUsernameRegex.test(username)) {
-      setAlertInfo({ type: 'error', message: 'Username hanya boleh berisi huruf, angka, dan underscore.' });
+      setAlertInfo({ type: 'error', message: 'Username hanya boleh huruf, angka, underscore (_) dan strip (-)' });
       return;
     }
 
@@ -66,6 +67,23 @@ export default function RegisterPage() {
     console.log('form data:', { email, password });
 
     try {
+      const userRef = collection(db, 'users');
+      const q = query(userRef, where('username', '==', username));
+      const querySnapShot = await getDocs(q);
+
+      if (!querySnapShot.empty) {
+        // username sudah ada
+        setAlertInfo({ type: 'error', message: `Username "${username}" sudah dipakai orang lain` });
+        setUsernameCheckLoading(false);
+        return;
+      }
+
+      // 3. Update irestore jika valid
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        username: username,
+      });
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('Berhasil Daftar', userCredential.user);
       setAlertInfo({ type: 'success', message: 'Pendaftaran berhasil!' });
@@ -115,7 +133,19 @@ export default function RegisterPage() {
             <span>{alertInfo.message}</span>
           </div>
         )}
-        <input className="input input-bordered w-full mb-4" type="text" name="username" placeholder="Username" required value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input
+          className="input input-bordered w-full mb-4"
+          type="text"
+          name="username"
+          placeholder="Username (1-20 karakter, huruf, angka, -, _)"
+          required // Makes the field mandatory
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          minLength={1} // Minimum length
+          maxLength={20} // Maximum length
+          pattern="^[a-zA-Z0-9_\-]+$" // Allowed characters (escaped hyphen)
+          title="Hanya huruf, angka, underscore (_), dan strip (-)" // Tooltip on invalid pattern
+        />
         <input className="input input-bordered w-full mb-4" type="email" name="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <input className="input input-bordered w-full mb-4" type="password" name="password" placeholder="Password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         <button className="btn btn-primary w-full rounded-lg" type="submit" disabled={loading}>

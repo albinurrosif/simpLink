@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/context/authcontext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -18,6 +18,7 @@ export default function DashboardPage() {
   // ==================== STATE MANAGEMENT ====================
   // 🟢 AUTH & LOADING STATES
   const [loadingForm, setLoadingForm] = useState(false);
+  const [usernameCheckLoading, setUsernameCheckLoading] = useState(false);
 
   // 🟢 USER PROFILE STATES
   const [userProfile, setUserProfile] = useState(null);
@@ -32,12 +33,14 @@ export default function DashboardPage() {
   // 🟢 EDIT FORM STATES
   const [editName, setEditName] = useState('');
   const [editLink, setEditLink] = useState('');
+  const [newUsername, setNewUsername] = useState('');
 
   // 🟢 MODAL STATES
   const [showEditModal, setShowEditModal] = useState(false);
   const [linkToEdit, setLinkToEdit] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [linkToDelete, setLinkToDelete] = useState(null);
+  const [showEditUsernameModal, setShowEditUsernameModal] = useState(false);
 
   // 🟢 UI FEEDBACK STATES
   const [alertInfo, setAlertInfo] = useState('');
@@ -191,6 +194,66 @@ export default function DashboardPage() {
     }
   };
 
+  // Open edit username modal
+  const openEditUsernameModal = async () => {
+    setNewUsername(userProfile?.username || '');
+    setShowEditUsernameModal(true);
+  };
+
+  const confirmEditUsername = async (event) => {
+    event.preventDefault();
+    if (!newUsername || usernameCheckLoading) return;
+
+    // 1. validasi awal (panjang & karakter)
+    const validUsernameRegex = /^[a-zA-Z0-9_\-]+$/;
+    if (newUsername < 1 || newUsername > 20) {
+      setAlertInfo({ type: 'error', message: 'Username harus 1-20 karakter.' });
+      return;
+    }
+    if (!validUsernameRegex.test(newUsername)) {
+      setAlertInfo({ type: 'error', message: 'Username hanya boleh huruf, angka, underscore (_) dan strip (-)' });
+      return;
+    }
+    // Jika username baru sama dengan yang lama, tidak perlu dicek/update
+    if (newUsername === userProfile?.username) {
+      setShowEditUsernameModal(false); // tutup modal
+      return;
+    }
+
+    setUsernameCheckLoading(true);
+    setAlertInfo(null);
+
+    try {
+      // 2. Cek Keunikan Username di Firestore
+      const userRef = collection(db, 'users');
+      const q = query(userRef, where('username', '==', newUsername));
+      const querySnapShot = await getDocs(q);
+
+      if (!querySnapShot.empty) {
+        // username sudah ada
+        setAlertInfo({ type: 'error', message: `Username "${newUsername}" sudah dipakai orang lain` });
+        setUsernameCheckLoading(false);
+        return;
+      }
+
+      // 3. Update irestore jika valid
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        username: newUsername,
+      });
+
+      // Update State Lokal
+      setUserProfile((prev) => ({ ...prev, username: newUsername }));
+      setAlertInfo({ type: 'success', message: 'Username berhasil diperbarui!' });
+      setShowEditUsernameModal(false);
+    } catch (error) {
+      console.log('Error update username', error);
+      setAlertInfo({ type: 'error', message: 'Gagal memperbarui username.' });
+    } finally {
+      setUsernameCheckLoading(false);
+    }
+  };
+
   // 🟠 PROFILE MANAGEMENT FUNCTIONS
   // Save bio to user profile
   const handleSaveBio = async () => {
@@ -224,6 +287,14 @@ export default function DashboardPage() {
   // Copy public URL to clipboard
   const copyToClipboard = () => {
     if (userProfile?.username) {
+      // Pastikan window ada sebelum mengakses location.origin
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      if (!origin) {
+        console.error('Origin tidak bisa didapatkan.'); // Handle jika origin tidak ada (jarang terjadi di client)
+        setCopySuccess('Gagal mendapatkan URL.');
+        setTimeout(() => setCopySuccess(''), 2000);
+        return;
+      }
       // Bangun URL lengkap
       // window.location.origin akan mengambil domain saat ini (misal: http://localhost:3000 atau https://KumpuLink.vercel.app)
       const publicUrl = `${window.location.origin}/${userProfile.username}`;
@@ -295,11 +366,23 @@ export default function DashboardPage() {
           <div className="p-4 bg-base-200 rounded-lg flex items-center justify-between gap-2">
             <div className="overflow-hidden">
               <p className="text-sm font-medium">URL Publik Anda:</p>
+
               <span className="text-primary font-mono text-sm break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/${userProfile.username}`}</span>
             </div>
-            <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-lg" onClick={copyToClipboard}>
-              {copySuccess ? 'Tersalin!' : 'Salin'}
-            </button>
+            <div className="flex justify-between gap-2">
+              <button className="btn btn-sm btn-ghost btn-square text-info hover:bg-info hover:text-info-content  p-0" onClick={openEditUsernameModal} aria-label="Edit Username">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                  />
+                </svg>
+              </button>
+              <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-lg" onClick={copyToClipboard}>
+                {copySuccess ? 'Tersalin!' : 'Salin'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -400,6 +483,56 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
+      {/* Modal Form Edit Username*/}
+      {showEditUsernameModal && (
+        <dialog id="edit_username_modal" className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Edit Username</h3>
+            <form onSubmit={confirmEditUsername}>
+              <div className="form-control py-4">
+                <label className="label">
+                  <span className="label-text">Username Baru</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Username (1-20 karakter, huruf, angka, - , _)"
+                  className="input input-bordered w-full"
+                  value={newUsername}
+                  onChange={(event) => setNewUsername(event.target.value)}
+                  required
+                  minLength={1}
+                  maxLength={20}
+                  pattern="^[a-zA-Z0-9_\-]+$"
+                  title="Hanya huruf, angka, strip (-), dan underscore (_)"
+                />
+                <label className="label">
+                  <span className="label-text-alt text-warning">Mengubah username akan mengubah URL publik Anda.</span>
+                </label>
+              </div>
+
+              {alertInfo && alertInfo.type == 'error' && (
+                <div role="alert" className="alert alert-error p-2 mt-4 text-sm">
+                  <span>{alertInfo.message}</span>
+                </div>
+              )}
+
+              <div className="modal-action mt-6">
+                <button type="button" className="btn rounded-lg" onClick={() => setShowEditUsernameModal(false)} disabled={usernameCheckLoading}>
+                  Batal
+                </button>
+                <button type="submit" className="btn rounded-lg btn-primary" disabled={usernameCheckLoading}>
+                  {usernameCheckLoading ? <span className="loading loading-spinner loading-xs"></span> : 'Simpan Username'}
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowEditUsernameModal(false)} disabled={usernameCheckLoading}>
+              Tutup
+            </button>
+          </form>
+        </dialog>
+      )}
       {/* Modal Form Edit */}
       {showEditModal && linkToEdit && (
         <dialog id="edit_modal" className="modal modal-open">
