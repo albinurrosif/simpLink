@@ -10,20 +10,42 @@ import { useAuth } from '@/context/authcontext';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [username, setUsername] = useState('');
-  const [alertInfo, setAlertInfo] = useState(null);
+  // ==================== HOOKS EXTERNAL ====================
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
+  // ==================== STATE MANAGEMENT ====================
+  // 🟢 FORM INPUT STATES
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+
+  // 🟢 LOADING & UI STATES
+  const [loading, setLoading] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null);
+
+  // ==================== EFFECTS ====================
+  // 🔵 AUTH REDIRECT EFFECT
+  // Redirect ke dashboard jika user sudah login
   useEffect(() => {
     if (!authLoading && user) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
 
+  // 🔵 AUTO-HIDE ALERT EFFECT
+  // Efek untuk menghilangkan alert
+  useEffect(() => {
+    if (alertInfo) {
+      const timer = setTimeout(() => {
+        setAlertInfo(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertInfo]);
+
+  // ==================== FUNCTIONS ====================
+  // 🟠 FORM HANDLING FUNCTIONS
   const handleSubmit = async (event) => {
     event.preventDefault(); // Mencegah reload form
     if (loading) return;
@@ -80,16 +102,6 @@ export default function RegisterPage() {
       }
     }
   };
-
-  // Efek untuk menghilangkan alert
-  useEffect(() => {
-    if (alertInfo) {
-      const timer = setTimeout(() => {
-        setAlertInfo(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [alertInfo]);
 
   return (
     <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-lg">

@@ -8,20 +8,41 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-
+  // ==================== HOOKS EXTERNAL ====================
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  // ==================== STATE MANAGEMENT ====================
+  // 🟢 FORM INPUT STATES
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // 🟢 LOADING & UI STATES
+  const [loading, setLoading] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null); // { type: 'success' | 'error', message: '...' } | null
 
+  // ==================== EFFECTS ====================
+  // 🔵 AUTH REDIRECT EFFECT
+  // Redirect ke dashboard jika user sudah login
   useEffect(() => {
     if (!authLoading && user) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
 
+  // 🔵 AUTO-HIDE ALERT EFFECT
+  // Efek untuk menghilangkan alert setelah beberapa detik
+  useEffect(() => {
+    if (alertInfo) {
+      const timer = setTimeout(() => {
+        setAlertInfo(null);
+      }, 3000); // Hilang setelah 3 detik
+      return () => clearTimeout(timer); // Bersihkan timer jika komponen unmount
+    }
+  }, [alertInfo]);
+
+  // ==================== FUNCTIONS ====================
+  // 🟠 FORM HANDLING FUNCTIONS
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -43,15 +64,7 @@ export default function LoginPage() {
     }
   };
 
-  // Efek untuk menghilangkan alert setelah beberapa detik
-  useEffect(() => {
-    if (alertInfo) {
-      const timer = setTimeout(() => {
-        setAlertInfo(null);
-      }, 3000); // Hilang setelah 3 detik
-      return () => clearTimeout(timer); // Bersihkan timer jika komponen unmount
-    }
-  }, [alertInfo]);
+  // ==================== RENDER LOGIC ====================
 
   return (
     <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-lg">

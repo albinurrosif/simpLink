@@ -8,17 +8,22 @@ import Link from 'next/link';
 
 // Komponen halaman menerima 'props' yang berisi 'params'
 export default function UserPage({ params }) {
+  // ==================== HOOKS EXTERNAL ====================
   // Resolving params
   const resolvedParams = use(params);
   const { user: loggedInUser } = useAuth();
 
-  // Langkah 1. State Manajemen
+  // ==================== STATE MANAGEMENT ====================
+  // 🟢 LOADING & ERROR STATES
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
-  const [links, setLinks] = useState([]);
   const [error, setError] = useState(null);
 
-  // Langkah 2. useEffect untuk mengambil data
+  // 🟢 DATA STATES
+  const [userProfile, setUserProfile] = useState(null);
+  const [links, setLinks] = useState([]);
+
+  // ==================== EFFECTS ====================
+  // 🔵 DATA FETCHING EFFECT
   useEffect(() => {
     // 1. dapatkan usernamedari URL yangdiberikan next.js
     // Ambil username dari objek params
@@ -74,6 +79,9 @@ export default function UserPage({ params }) {
     }
   }, [resolvedParams]); //3. depedency array untuk menjalankan ulang saat username berubah
 
+  // ==================== RENDER LOGIC ====================
+
+  // Skeleton loading UI
   if (loading || !userProfile) {
     // Tampilkan Skeleton UI
     return (
@@ -92,11 +100,9 @@ export default function UserPage({ params }) {
 
   return (
     <div className="w-full max-w-xs mx-auto  relative">
-   
       {loggedInUser && loggedInUser.uid === userProfile?.userId && (
         // Posisi absolut relatif terhadap div di atas
         <div className="absolute top-2 right-2 z-10 tooltip" data-tip="Edit halaman">
-        
           <Link href="/dashboard" className="link link-primary" aria-label="Edit Halaman">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
               <path
@@ -110,18 +116,14 @@ export default function UserPage({ params }) {
       )}
       {/* Profile Section */}
       <div className="flex flex-col items-center text-center pt-8 mb-6">
-    
         <div className="avatar mb-4">
           <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-       
             {/* Using ui-avatars for a placeholder image */}
             <img src={`https://ui-avatars.com/api/?name=${userProfile?.username}&background=random&color=fff&size=128`} alt={`${userProfile?.username} avatar`} />
           </div>
         </div>
-        <h1 className="text-xl font-semibold text-base-content">
-        @{userProfile?.username}
-        </h1>
-        
+        <h1 className="text-xl font-semibold text-base-content">@{userProfile?.username}</h1>
+
         {/* <p className="text-sm text-neutral-500 mt-1">{userProfile?.bio || ''}</p> */}
       </div>
       {/* Link Buttons Section */}
@@ -141,6 +143,38 @@ export default function UserPage({ params }) {
           </li>
         ))}
       </ul>
+
+      {/* IMPROVED CTA SECTION */}
+      <div className="text-center mt-8">
+        <Link
+          href="/"
+          className="
+            inline-flex items-center justify-center
+            px-6 py-3
+            bg-gradient-to-r from-primary to-primary/90
+            hover:from-primary/90 hover:to-primary
+            text-white font-semibold
+            rounded-full
+            shadow-lg hover:shadow-xl
+            transform hover:scale-105
+            transition-all duration-300 ease-out
+            border-0
+            text-sm
+            w-full max-w-xs
+            group
+          "
+        >
+          <span className="flex items-center gap-2">
+            ✨ Buat Link Bio Gratis
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+        </Link>
+
+        {/* Optional: Tambahkan teks penjelasan */}
+        <p className="text-xs text-neutral-500 mt-3">Buat halaman personalmu dalam 1 menit</p>
+      </div>
       {/* Footer Branding Link*/}
       <div className="text-center mt-8">
         <Link href="/" className="text-xs text-neutral-500 hover:text-primary">

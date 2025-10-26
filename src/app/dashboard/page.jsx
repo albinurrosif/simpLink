@@ -11,22 +11,41 @@ import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
 export default function DashboardPage() {
+  // ==================== HOOKS EXTERNAL ====================
   const { user, loading } = useAuth();
   const router = useRouter();
+
+  // ==================== STATE MANAGEMENT ====================
+  // 🟢 AUTH & LOADING STATES
   const [loadingForm, setLoadingForm] = useState(false);
+
+  // 🟢 USER PROFILE STATES
+  const [userProfile, setUserProfile] = useState(null);
+  const [bio, setBio] = useState(userProfile?.bio || '');
+  const [savingBio, setSavingBio] = useState(false);
+
+  // 🟢 LINK FORM STATES
   const [name, setName] = useState('');
   const [link, setLink] = useState('');
   const [links, setLinks] = useState([]);
-  const [userProfile, setUserProfile] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [linkToDelete, setLinkToDelete] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [linkToEdit, setLinkToEdit] = useState(null);
+
+  // 🟢 EDIT FORM STATES
   const [editName, setEditName] = useState('');
   const [editLink, setEditLink] = useState('');
+
+  // 🟢 MODAL STATES
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [linkToEdit, setLinkToEdit] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [linkToDelete, setLinkToDelete] = useState(null);
+
+  // 🟢 UI FEEDBACK STATES
   const [alertInfo, setAlertInfo] = useState('');
   const [copySuccess, setCopySuccess] = useState('');
 
+  // ==================== EFFECTS ====================
+  // 🔵 DATA FETCHING EFFECTS
+  // Fetch user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
@@ -42,6 +61,55 @@ export default function DashboardPage() {
     fetchUserProfile();
   }, [user]);
 
+  // Fetch user links data
+  useEffect(() => {
+    const fetchLinks = async () => {
+      if (user) {
+        try {
+          // 1. buat query
+          const q = query(collection(db, 'links'), where('userId', '==', user.uid));
+          // 2. eksekusi query
+          const querySnapshot = await getDocs(q);
+          // 3. Olah hasil query menjadi array
+          const linksData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          setLinks(linksData);
+        } catch (error) {
+          console.error('Error fetching links: ', error);
+        }
+      }
+    };
+    fetchLinks(); // panggil fungsi
+  }, [user]);
+
+  // Sync bio from userProfile
+  useEffect(() => {
+    if (userProfile?.bio) {
+      setBio(userProfile.bio);
+    }
+  }, [userProfile]);
+
+  // 🔵 UI/SIDE EFFECTS
+  // Auth redirect if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      setAlertInfo({ type: 'error', message: 'Silakan login untuk mengakses Dasbor.' });
+      router.push('/login');
+    }
+  }, [loading, user, router]);
+
+  // Auto-hide alert after timeout
+  useEffect(() => {
+    if (alertInfo) {
+      const timer = setTimeout(() => {
+        setAlertInfo(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertInfo]);
+
+  // ==================== FUNCTIONS ====================
+  // 🟠 LINK MANAGEMENT FUNCTIONS
+  // Handle add new link
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -71,6 +139,7 @@ export default function DashboardPage() {
     }
   };
 
+  // Open edit modal with link data
   const openEditModal = (linkData) => {
     setLinkToEdit(linkData); // Simpan seluruh data link { id, name, link }
     setEditName(linkData.name); // Isi form modal dengan data lama
@@ -78,6 +147,7 @@ export default function DashboardPage() {
     setShowEditModal(true); // Buka modal
   };
 
+  // Confirm and save link edits
   const confirmEditLink = async (event) => {
     event.preventDefault(); // Mencegah form modal me-refresh
     if (!linkToEdit || !editName || !editLink) return;
@@ -97,11 +167,13 @@ export default function DashboardPage() {
     }
   };
 
+  // Open delete confirmation modal
   const openDeleteModal = (id) => {
     setLinkToDelete(id);
     setShowDeleteModal(true);
   };
 
+  // Confirm and execute link deletion
   const confirmDeleteLink = async () => {
     if (!linkToDelete) return; // Pastikan ada ID yang disimpan
 
@@ -119,42 +191,37 @@ export default function DashboardPage() {
     }
   };
 
-  // Efek untuk menghilangkan alert
-  useEffect(() => {
-    if (alertInfo) {
-      const timer = setTimeout(() => {
-        setAlertInfo(null);
-      }, 3000);
-      return () => clearTimeout(timer);
+  // 🟠 PROFILE MANAGEMENT FUNCTIONS
+  // Save bio to user profile
+  const handleSaveBio = async () => {
+    // Validasi dasar
+    if (!user || savingBio) return;
+
+    setSavingBio(true);
+
+    try {
+      // 1. Dapatkan reference ke dokumen user
+      const docRef = doc(db, 'users', user.uid);
+
+      // 2. Update field 'bio' di Firestore
+      await updateDoc(docRef, {
+        bio: bio,
+      });
+
+      // 3. Update state lokal agar UI langsung berubah
+      setUserProfile((prev) => ({ ...prev, bio: bio }));
+
+      setAlertInfo({ type: 'success', message: 'Bio berhasil disimpan' });
+    } catch (error) {
+      console.log(error);
+      setAlertInfo({ type: 'error', message: 'Gagal menyimpan bio' });
+    } finally {
+      setSavingBio(false);
     }
-  }, [alertInfo]);
+  };
 
-  useEffect(() => {
-    const fetchLinks = async () => {
-      if (user) {
-        try {
-          // 1. buat query
-          const q = query(collection(db, 'links'), where('userId', '==', user.uid));
-          // 2. eksekusi query
-          const querySnapshot = await getDocs(q);
-          // 3. Olah hasil query menjadi array
-          const linksData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-          setLinks(linksData);
-        } catch (error) {
-          console.error('Error fetching links: ', error);
-        }
-      }
-    };
-    fetchLinks(); // panggil fungsi
-  }, [user]); // dependensi user artinya jalankan ulang saat user berubah
-
-  useEffect(() => {
-    if (!loading && !user) {
-      setAlertInfo({ type: 'error', message: 'Silakan login untuk mengakses Dasbor.' });
-      router.push('/login');
-    }
-  }, [loading, user, router]);
-
+  // 🟠 UTILITY FUNCTIONS
+  // Copy public URL to clipboard
   const copyToClipboard = () => {
     if (userProfile?.username) {
       // Bangun URL lengkap
@@ -178,6 +245,9 @@ export default function DashboardPage() {
     }
   };
 
+  // ==================== RENDER LOGIC ====================
+
+  // Skeleton loading UI
   if (loading || !user) {
     // Tampilkan Skeleton UI
     return (
@@ -232,6 +302,12 @@ export default function DashboardPage() {
             </button>
           </div>
         )}
+
+        <fieldset className="border border-base-300 rounded-lg p-4 w-full min-w-0">
+          <legend className="px-2 text-sm font-medium">Bio anda:</legend>
+          <textarea value={bio} onChange={(event) => setBio(event.target.value)} onBlur={handleSaveBio} className="textarea h-12 w-full" placeholder="Type something..."></textarea>
+          <div className="text-sm text-gray-500 mt-1">Opsional</div>
+        </fieldset>
       </div>
 
       <section className=" flex flex-col md:flex-row gap-6">

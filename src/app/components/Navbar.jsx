@@ -6,12 +6,20 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function Navbar() {
+  // ==================== HOOKS EXTERNAL ====================
   const { user } = useAuth();
   const router = useRouter();
+
+  // ==================== STATE MANAGEMENT ====================
+  // 🟢 MODAL STATES
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // ==================== FUNCTIONS ====================
+  // 🟠 AUTH FUNCTIONS
+  // LogOut
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -21,6 +29,7 @@ export default function Navbar() {
     }
   };
 
+  // 🟠 MODAL HANDLING FUNCTIONS
   // Fungsi untuk membuka modal logout
   const openLogoutModal = () => {
     setShowLogoutModal(true);
@@ -32,11 +41,20 @@ export default function Navbar() {
     setShowLogoutModal(false); // Tutup modal setelah logout
   };
 
+  // ==================== RENDER LOGIC ====================
+
   return (
     <div className="navbar bg-base-100 shadow-md">
       {/* 1. Branding / Logo (Kiri) */}
       <div className="navbar-start">
         <Link href="/" className="btn btn-ghost text-xl">
+          <Image
+            src="/Screenshot_2025-10-23_085504-removebg-preview.png" // <-- 3. Path relatif ke public folder (ganti nama file)
+            alt="Kumpulink Logo"
+            width={100}
+            height={30}
+            priority // Opsional: Prioritaskan loading logo
+          />{' '}
           KumpuLink
         </Link>
       </div>
