@@ -21,6 +21,7 @@ export default function UserPage({ params }) {
   // 🟢 DATA STATES
   const [userProfile, setUserProfile] = useState(null);
   const [links, setLinks] = useState([]);
+  const [copiedLinkId, setCopiedLinkId] = useState(null);
 
   // ==================== EFFECTS ====================
   // 🔵 DATA FETCHING EFFECT
@@ -78,6 +79,42 @@ export default function UserPage({ params }) {
       setLoading(false);
     }
   }, [resolvedParams]); //3. depedency array untuk menjalankan ulang saat username berubah
+
+  // ==================== FUNCTIONS ====================
+  const handleShareOrCopy = async (event, link) => {
+    // 1. hentikan event agar tidak memicu navigasi link
+    event.stopPropagation(); // Mencegah "bubbling" ke elemen lain
+    event.preventDefault(); // Mencegah perilaku default (meskipun di button, ini aman)
+
+    // data yang dibagikan
+    const shareData = {
+      title: userProfile.username, // judul saat dibagikan
+      text: `Lihat link ${userProfile.username} di KumpuLink!`, // deskripsi
+      url: link, // link
+    };
+
+    try {
+      // 2. coba gunakan navigator.share (Untuk Mobile)
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log('Berhasil dibagikan via Share API');
+      } else {
+        // 3. jika gagal/tidak ada, gunakan clipboard (untuk dekstop)
+        await navigator.clipboard.writeText(link);
+        setCopiedLinkId(link); // simpan link yang disalin
+        setTimeout(() => setCopiedLinkId(null), 2000); //hapus umpan balik setelah beberapa detik
+      }
+    } catch (err) {
+      console.error('Gagal menyalin link', err);
+
+      if (err.name !== 'AbortError') {
+        // tampilkan error salin  cadangan jika gagal
+        await navigator.clipboard.writeText(link);
+        setCopiedLinkId(link);
+        setTimeout(() => setCopiedLinkId(null), 2000);
+      }
+    }
+  };
 
   // ==================== RENDER LOGIC ====================
 
@@ -157,16 +194,26 @@ export default function UserPage({ params }) {
       <ul className="w-full space-y-3">
         {/* Adjusted spacing */}
         {links.map((link) => (
-          <li key={link.id} className="list-none w-full">
-            <a
-              href={link.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              // Example: Linktree-style button (light bg, dark text, full round, shadow)
-              className="btn bg-base-100 border-base-300 text-base-content hover:bg-base-200 btn-block text-base normal-case rounded-full shadow hover:scale-[1.02] transition-transform duration-150 ease-in-out"
-            >
-              {link.name}
-            </a>
+          <li key={link.id} className="list-none w-full ">
+            <div className="btn bg-base-100 border-base-300 text-base-content hover:bg-base-200 btn-block text-base normal-case rounded-full shadow hover:scale-[1.02] transition-transform duration-150 ease-in-outflex flex-row relative py-6">
+              <a href={link.link} target="_blank" rel="noopener noreferrer" className="absolute left-1/2 transform -translate-x-1/2 text-neutral-500 hover:text-primary">
+                {link.name}
+              </a>
+              <button onClick={(event) => handleShareOrCopy(event, link.link)} className="ml-auto btn btn-ghost btn-sm btn-circle right-2" aria-label="Salin Link">
+                {copiedLinkId === link.link ? (
+                  // Ikon Check (jika baru disalin)
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-neutral-500 hover:text-primary" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </li>
         ))}
       </ul>
@@ -177,7 +224,7 @@ export default function UserPage({ params }) {
           href="/"
           className="
             inline-flex items-center justify-center
-            px-6 py-3
+            px-3 py-1.5
             bg-gradient-to-r from-primary to-primary/90
             hover:from-primary/90 hover:to-primary
             text-white font-semibold
