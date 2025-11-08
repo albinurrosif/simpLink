@@ -498,7 +498,14 @@ export default function DashboardPage() {
           {/* Tombol Lihat Halaman Publik*/}
           <div>
             {userProfile?.username && (
-              <Link href={`/${userProfile.username}`} className="btn btn-outline btn-primary btn-sm rounded-lg" rel="noopener noreferrer">
+              <Link
+                href={`/${userProfile.username}`}
+                className="btn btn-outline btn-primary btn-sm rounded-lg min-h-6 h-6 px-3 sm:px-4
+  text-xs sm:text-sm
+  whitespace-nowrap
+  flex-shrink-0"
+                rel="noopener noreferrer"
+              >
                 Lihat Halaman Publikmu ✨
               </Link>
             )}

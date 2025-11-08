@@ -1,4 +1,7 @@
 @import 'tailwindcss';
 
 /* Muat plugin daisyUI dan konfigurasikan tema di sini */
-@plugin "daisyui";
+@plugin "daisyui" {
+themes: all;
+}
+

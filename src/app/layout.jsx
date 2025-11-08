@@ -23,7 +23,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} data-theme="dracula">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} data-theme="dim">
       <body className="antialiased">
         <AuthProvider>
           {/* {children} di sini akan menjadi (app)/layout.jsx ATAU (public)/layout.jsx,

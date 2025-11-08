@@ -11,7 +11,7 @@ module.exports = {
 
   // Konfigurasi daisyUI (termasuk tema) TETAP di sini
   daisyui: {
-    themes: ['cupcake', 'dracula'], // Tema yang ingin Anda gunakan
+    themes: ['dracula'], // Tema yang ingin Anda gunakan
     // Opsi konfigurasi daisyUI lainnya bisa ditambahkan di sini
   },
 };

@@ -151,25 +151,31 @@ export default function UserPage({ params }) {
     );
   }
   return (
-    <div className="w-full max-w-xs mx-auto  relative">
-      {loggedInUser && loggedInUser.uid === userProfile?.userId && (
-        // Posisi absolut relatif terhadap div di atas
-        <div className="absolute top-2 right-2 z-10 tooltip" data-tip="Edit halaman">
-          <Link href="/dashboard" className="link link-primary" aria-label="Edit Halaman">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-              />
-            </svg>
-          </Link>
-        </div>
-      )}
+    <>
       {/* Profile Section */}
-      <div className="flex flex-col items-center text-center pt-8 mb-6">
+      <div className="flex flex-col items-center text-center pt-16 mb-8">
+        {loggedInUser && loggedInUser.uid === userProfile?.userId && (
+          // Posisi absolut relatif terhadap div di atas
+          <div className="absolute top-6 left-6 z-10 tooltip border-secondary p-3 bg-secondary rounded-full hover:bg-primary" data-tip="Edit halaman">
+            <Link href="/dashboard" className=" text-base-300" aria-label="Edit Halaman">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+              </svg>
+            </Link>
+          </div>
+        )}
+        {loggedInUser && loggedInUser.uid === userProfile?.userId && (
+          // Posisi absolut relatif terhadap div di atas
+          <div className="absolute top-6 right-6 z-10 tooltip border-secondary p-3 bg-secondary rounded-full hover:bg-primary" data-tip="Edit halaman">
+            <Link href="/dashboard" className=" text-base-300" aria-label="Edit Halaman">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+              </svg>
+            </Link>
+          </div>
+        )}
         <div className="avatar mb-4">
-          <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+          <div className="w-30 rounded-full">
             {userProfile?.photoURL ? (
               // 1. Jika userProfile.photoURL ADA, tampilkan foto itu
               <img src={userProfile.photoURL} alt={`${userProfile.username} avatar`} />
@@ -187,15 +193,15 @@ export default function UserPage({ params }) {
             )}
           </div>
         </div>
-        <h1 className="text-xl font-semibold text-base-content">@{userProfile?.username}</h1>
-        {userProfile?.bio && <p className="text-sm text-base-content/80 mt-2 text-center max-w-xs">{userProfile.bio}</p>}
+        <h1 className="text-4xl font-semibold text-base-content">{userProfile?.username}</h1>
+        {userProfile?.bio && <p className="text-md text-base-content/80 mt-2 text-center max-w-xs">{userProfile.bio}</p>}
       </div>
       {/* Link Buttons Section */}
-      <ul className="w-full space-y-3">
+      <ul className="w-full space-y-4 pt-4">
         {/* Adjusted spacing */}
         {links.map((link) => (
           <li key={link.id} className="list-none w-full ">
-            <div className="btn bg-base-100 border-base-300 text-base-content hover:bg-base-200 btn-block text-base normal-case rounded-full shadow hover:scale-[1.02] transition-transform duration-150 ease-in-outflex flex-row relative py-6">
+            <div className="btn bg-base-200 border-base-300 text-base-content  btn-block text-xl normal-case rounded-full shadow hover:scale-[1.02] transition-transform duration-150 ease-in-outflex flex-row relative py-9">
               <a href={link.link} target="_blank" rel="noopener noreferrer" className="absolute left-1/2 transform -translate-x-1/2 text-neutral-500 hover:text-primary">
                 {link.name}
               </a>
@@ -217,23 +223,22 @@ export default function UserPage({ params }) {
           </li>
         ))}
       </ul>
-
       {/* IMPROVED CTA SECTION */}
-      <div className="text-center mt-8">
+      <div className="text-center mt-18">
         <Link
           href="/"
           className="
             inline-flex items-center justify-center
-            px-3 py-1.5
+            px-3 py-3
             bg-gradient-to-r from-primary to-primary/90
             hover:from-primary/90 hover:to-primary
-            text-white font-semibold
-            rounded-full
+            text-neutral font-semibold
+            rounded-md
             shadow-lg hover:shadow-xl
             transform hover:scale-105
             transition-all duration-300 ease-out
             border-0
-            text-sm
+            text-lg
             w-100% max-w-xs
             group
           "
@@ -247,14 +252,14 @@ export default function UserPage({ params }) {
         </Link>
 
         {/* Optional: Tambahkan teks penjelasan */}
-        <p className="text-xs text-neutral-500 mt-3">Buat halaman personalmu dalam 1 menit</p>
+        <p className="text-sm text-neutral-500 mt-3">Buat halaman personalmu dalam 1 menit</p>
       </div>
       {/* Footer Branding Link*/}
-      <div className="text-center mt-8">
-        <Link href="/" className="text-xs text-neutral-500 hover:text-primary">
+      <div className="text-center mt-10">
+        <Link href="/" className="text-xl text-neutral-500 hover:text-primary">
           Powered by KumpuLink
         </Link>
       </div>
-    </div>
+    </>
   );
 }
