@@ -1,8 +1,6 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/authcontext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import { Analytics } from '@vercel/analytics/next';
 import { Suspense } from 'react';
@@ -26,9 +24,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} data-theme="dracula">
-      <body className="flex flex-col min-h-screen antialiased">
+      <body className="antialiased">
         <AuthProvider>
-          <Navbar />
+          {/* {children} di sini akan menjadi (app)/layout.jsx ATAU (public)/layout.jsx,
+            tergantung halaman yang diakses.
+          */}
           <Suspense
             fallback={
               <div className="min-h-screen flex items-center justify-center">
@@ -36,9 +36,8 @@ export default function RootLayout({ children }) {
               </div>
             }
           >
-            <div className="min-h-screen flex items-center justify-center">{children}</div>
+            {children}
           </Suspense>
-          <Footer />
         </AuthProvider>
         <Suspense fallback={null}>
           <GoogleAnalytics />
