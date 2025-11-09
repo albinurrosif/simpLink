@@ -22,8 +22,8 @@ export default function UserPage({ params }) {
   // 🟢 DATA STATES
   const [userProfile, setUserProfile] = useState(null);
   const [links, setLinks] = useState([]);
+  const [toastMessage, setToastMessage] = useState('');
   const [copiedLinkId, setCopiedLinkId] = useState(null);
-  const [profileCopied, setProfileCopied] = useState(false);
 
   // ==================== EFFECTS ====================
   // 🔵 DATA FETCHING EFFECT
@@ -82,6 +82,15 @@ export default function UserPage({ params }) {
     }
   }, [resolvedParams]); //3. depedency array untuk menjalankan ulang saat username berubah
 
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => {
+        setToastMessage('');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   // ==================== FUNCTIONS ====================
   const handleShareOrCopy = async (event, link) => {
     // 1. hentikan event agar tidak memicu navigasi link
@@ -103,8 +112,9 @@ export default function UserPage({ params }) {
       } else {
         // 3. jika gagal/tidak ada, gunakan clipboard (untuk dekstop)
         await navigator.clipboard.writeText(link);
-        setCopiedLinkId(link); // simpan link yang disalin
-        setTimeout(() => setCopiedLinkId(null), 2000); //hapus umpan balik setelah beberapa detik
+        setToastMessage('Link disalin ke clipboard!'); // <-- (1) Tampilkan Toast
+        setCopiedLinkId(link.id); // <-- (2) Atur state untuk ikon check (gunakan link.id agar unik)
+        setTimeout(() => setCopiedLinkId(null), 2000); // <-- (3) Reset ikon check setelah 2 detik
       }
     } catch (err) {
       console.error('Gagal menyalin link', err);
@@ -112,8 +122,9 @@ export default function UserPage({ params }) {
       if (err.name !== 'AbortError') {
         // tampilkan error salin  cadangan jika gagal
         await navigator.clipboard.writeText(link);
-        setCopiedLinkId(link);
-        setTimeout(() => setCopiedLinkId(null), 2000);
+        setToastMessage('Link disalin ke clipboard!'); // <-- (1) Tampilkan Toast
+        setCopiedLinkId(link.id); // <-- (2) Atur state untuk ikon check (gunakan link.id agar unik)
+        setTimeout(() => setCopiedLinkId(null), 2000); // <-- (3) Reset ikon check setelah 2 detik
       }
     }
   };
@@ -131,22 +142,21 @@ export default function UserPage({ params }) {
         console.log('Berhasil dibagikan via Share API');
       } else {
         await navigator.clipboard.writeText(window.location.href);
-        setProfileCopied(true);
-        setTimeout(() => setProfileCopied(false), 2000);
+        setToastMessage('Tautan profil disalin!');
       }
     } catch (err) {
       console.error('Gagal menyalin link', err);
       if (err.name !== 'AbortError') {
         try {
           await navigator.clipboard.writeText(window.location.href);
-          setProfileCopied(true);
-          setTimeout(() => setProfileCopied(false), 2000);
+          setToastMessage('Tautan profil disalin!');
         } catch (copyErr) {
-          console.error('Gagal menyalin', copyError);
+          console.error('Gagal menyalin', copyErr);
         }
       }
     }
   };
+
   // ==================== RENDER LOGIC ====================
 
   // Skeleton loading UI
@@ -245,7 +255,7 @@ export default function UserPage({ params }) {
                 {link.name}
               </a>
               <button onClick={(event) => handleShareOrCopy(event, link.link)} className="ml-auto btn btn-ghost btn-sm btn-circle right-2" aria-label="Salin Link">
-                {copiedLinkId === link.link ? (
+                {copiedLinkId === link.id ? (
                   // Ikon Check (jika baru disalin)
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -298,6 +308,15 @@ export default function UserPage({ params }) {
         <Link href="/" className="text-xl text-primary-500 hover:text-primary">
           Powered by KumpuLink
         </Link>
+      </div>
+      <div className="toast toast-top toast-center z-20">
+        {toastMessage && (
+          <div className="alert alert-success shadow-lg">
+            <div>
+              <span>{toastMessage}</span>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
