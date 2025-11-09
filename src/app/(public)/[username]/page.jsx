@@ -5,6 +5,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/authcontext';
 import Link from 'next/link';
+import { title } from 'process';
 
 // Komponen halaman menerima 'props' yang berisi 'params'
 export default function UserPage({ params }) {
@@ -22,6 +23,7 @@ export default function UserPage({ params }) {
   const [userProfile, setUserProfile] = useState(null);
   const [links, setLinks] = useState([]);
   const [copiedLinkId, setCopiedLinkId] = useState(null);
+  const [profileCopied, setProfileCopied] = useState(false);
 
   // ==================== EFFECTS ====================
   // 🔵 DATA FETCHING EFFECT
@@ -116,15 +118,49 @@ export default function UserPage({ params }) {
     }
   };
 
+  const handleShareProfile = async () => {
+    const shareData = {
+      title: `Link KumpuLink @${userProfile.username}`,
+      text: `Lihat semua link ${userProfile.username} di KumpuLink!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log('Berhasil dibagikan via Share API');
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setProfileCopied(true);
+        setTimeout(() => setProfileCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error('Gagal menyalin link', err);
+      if (err.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          setProfileCopied(true);
+          setTimeout(() => setProfileCopied(false), 2000);
+        } catch (copyErr) {
+          console.error('Gagal menyalin', copyError);
+        }
+      }
+    }
+  };
   // ==================== RENDER LOGIC ====================
 
   // Skeleton loading UI
   if (loading) {
     // Tampilkan Skeleton UI
     return (
-      <div className="min-h-screen flex flex-col gap-4 items-center justify-center w-full max-w-sm mx-auto">
-        <div className="skeleton h-32 w-full"></div>
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-start w-full max-w-sm mx-auto pt-20 pb-4">
+        <div className="flex flex-col items-center mb-6">
+          <div className="skeleton h-32 w-32 rounded-full mb-4"></div>
+        </div>
         <div className="skeleton h-4 w-28"></div>
+        <div className="skeleton h-20 w-full"></div>
+        <div className="skeleton h-20 w-full"></div>
+        <div className="skeleton h-20 w-full"></div>
         <div className="skeleton h-4 w-full"></div>
         <div className="skeleton h-4 w-full"></div>
       </div>
@@ -156,7 +192,7 @@ export default function UserPage({ params }) {
       <div className="flex flex-col items-center text-center pt-16 mb-8">
         {loggedInUser && loggedInUser.uid === userProfile?.userId && (
           // Posisi absolut relatif terhadap div di atas
-          <div className="absolute top-6 left-6 z-10 tooltip border-secondary p-3 bg-secondary rounded-full hover:bg-primary" data-tip="Edit halaman">
+          <div className="absolute top-6 left-6 z-10 tooltip border-secondary p-4 bg-secondary rounded-full hover:bg-primary" data-tip="Edit halaman">
             <Link href="/dashboard" className=" text-base-300" aria-label="Edit Halaman">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
@@ -164,16 +200,19 @@ export default function UserPage({ params }) {
             </Link>
           </div>
         )}
-        {loggedInUser && loggedInUser.uid === userProfile?.userId && (
-          // Posisi absolut relatif terhadap div di atas
-          <div className="absolute top-6 right-6 z-10 tooltip border-secondary p-3 bg-secondary rounded-full hover:bg-primary" data-tip="Edit halaman">
-            <Link href="/dashboard" className=" text-base-300" aria-label="Edit Halaman">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
-              </svg>
-            </Link>
-          </div>
-        )}
+
+        <div className="absolute top-6 right-6 z-10 tooltip border-secondary p-3 px-4 bg-secondary rounded-full hover:bg-primary" data-tip="Bagikan">
+          <button
+            onClick={handleShareProfile} // Panggil fungsi share/copy
+            className="text-base-300"
+            aria-label="Bagikan Halaman"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+            </svg>
+          </button>
+        </div>
+
         <div className="avatar mb-4">
           <div className="w-30 rounded-full">
             {userProfile?.photoURL ? (
@@ -256,7 +295,7 @@ export default function UserPage({ params }) {
       </div>
       {/* Footer Branding Link*/}
       <div className="text-center mt-10">
-        <Link href="/" className="text-xl text-neutral-500 hover:text-primary">
+        <Link href="/" className="text-xl text-primary-500 hover:text-primary">
           Powered by KumpuLink
         </Link>
       </div>

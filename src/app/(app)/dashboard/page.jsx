@@ -548,7 +548,7 @@ export default function DashboardPage() {
       </div>
 
       <section className=" flex flex-col md:flex-row gap-6">
-        <div className="card bg-base-100 shadow-md flex-1 md:order-1">
+        <div className="card bg-base-100 shadow-2xl flex-1 md:order-1">
           <form onSubmit={handleSubmit} className="card-body">
             <h2 className="card-title mb-4">Tambah Link Baru</h2>
             <div className="form-control">
@@ -571,7 +571,7 @@ export default function DashboardPage() {
           </form>
         </div>
 
-        <div className="card bg-base-100 shadow-md flex-1 md:order-2">
+        <div className="card bg-base-100 shadow-2xl flex-1 md:order-2">
           <div className="card-body">
             <h2 className="card-title mb-4">Link Anda</h2>
             {links.length === 0 ? (
