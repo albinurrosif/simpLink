@@ -83,6 +83,26 @@ export default function UserPage({ params }) {
   }, [resolvedParams]); //3. depedency array untuk menjalankan ulang saat username berubah
 
   useEffect(() => {
+    // Tema default
+    const defaultTheme = 'default';
+    let themeToApply = defaultTheme;
+
+    // 1. cek tema user jika ada
+    if (userProfile && userProfile.theme) {
+      themeToApply = userProfile.theme;
+    }
+
+    // 2. terapkan ke <html></html>
+    document.documentElement.setAttribute('data-theme', themeToApply);
+
+    // 3. Fungsi Cleanup
+    return () => {
+      // Kembalikan tema ke default agar halaman lain (spt /login) konsisten
+      document.documentElement.setAttribute('data-theme', defaultTheme);
+    };
+  }, [userProfile]);
+
+  useEffect(() => {
     if (toastMessage) {
       const timer = setTimeout(() => {
         setToastMessage('');
@@ -199,25 +219,21 @@ export default function UserPage({ params }) {
   return (
     <>
       {/* Profile Section */}
-      <div className="flex flex-col items-center text-center pt-16 mb-8">
+      <div className="flex flex-col items-center text-center pt-6 mb-6">
         {loggedInUser && loggedInUser.uid === userProfile?.userId && (
           // Posisi absolut relatif terhadap div di atas
-          <div className="absolute top-6 left-6 z-10 tooltip border-secondary p-4 bg-secondary rounded-full hover:bg-primary" data-tip="Edit halaman">
-            <Link href="/dashboard" className=" text-base-300" aria-label="Edit Halaman">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+          <div className="absolute top-4 left-4 z-10 tooltip" data-tip="Edit Halaman">
+            <Link href="/dashboard" className="btn btn-circle btn-sm btn-ghost" aria-label="Edit Halaman">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
               </svg>
             </Link>
           </div>
         )}
 
-        <div className="absolute top-6 right-6 z-10 tooltip border-secondary p-3 px-4 bg-secondary rounded-full hover:bg-primary" data-tip="Bagikan">
-          <button
-            onClick={handleShareProfile} // Panggil fungsi share/copy
-            className="text-base-300"
-            aria-label="Bagikan Halaman"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+        <div className="absolute top-4 right-4 z-10 tooltip" data-tip={toastMessage ? toastMessage : 'Bagikan Halaman'}>
+          <button onClick={handleShareProfile} className="btn btn-circle btn-sm btn-ghost" aria-label="Bagikan Halaman">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
             </svg>
           </button>
@@ -230,13 +246,10 @@ export default function UserPage({ params }) {
               <img src={userProfile.photoURL} alt={`${userProfile.username} avatar`} />
             ) : (
               // 2. Jika TIDAK ADA, tampilkan placeholder inisial
-              // (Gunakan daisyUI 'placeholder' dengan benar)
               <div className="avatar placeholder">
                 <div className="bg-neutral text-neutral-content rounded-full w-20">
-                  <span className="text-3xl">
-                    {/* Perbaiki typo: tambahkan '()' */}
-                    <img src={`https://ui-avatars.com/api/?name=${userProfile?.username}&background=random&color=fff&size=128`} alt={`${userProfile?.username} avatar`} />
-                  </span>
+                  {/* Tampilkan inisial*/}
+                  <span className="text-3xl">{userProfile?.username?.charAt(0).toUpperCase() || '?'}</span>
                 </div>
               </div>
             )}
@@ -246,29 +259,31 @@ export default function UserPage({ params }) {
         {userProfile?.bio && <p className="text-md text-base-content/80 mt-2 text-center max-w-xs">{userProfile.bio}</p>}
       </div>
       {/* Link Buttons Section */}
-      <ul className="w-full space-y-4 pt-4">
-        {/* Adjusted spacing */}
+      <ul className="w-full space-y-4 mt-2">
         {links.map((link) => (
-          <li key={link.id} className="list-none w-full ">
-            <div className="btn bg-base-200 border-base-300 text-base-content  btn-block text-xl normal-case rounded-full shadow hover:scale-[1.02] transition-transform duration-150 ease-in-outflex flex-row relative py-9">
-              <a href={link.link} target="_blank" rel="noopener noreferrer" className="absolute left-1/2 transform -translate-x-1/2 text-neutral-500 hover:text-primary">
-                {link.name}
-              </a>
-              <button onClick={(event) => handleShareOrCopy(event, link.link)} className="ml-auto btn btn-ghost btn-sm btn-circle right-2" aria-label="Salin Link">
-                {copiedLinkId === link.id ? (
-                  // Ikon Check (jika baru disalin)
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-neutral-500 hover:text-primary" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2" />
-                    <circle cx="12" cy="12" r="2" />
-                    <circle cx="12" cy="19" r="2" />
-                  </svg>
-                )}
-              </button>
-            </div>
+          <li key={link.id} className="list-none w-full relative">
+            <a href={link.link} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block rounded-field text-lg normal-case flex justify-center items-center py-3 h-auto">
+              {link.name}
+            </a>
+            <button
+              onClick={(event) => handleShareOrCopy(event, link)}
+              // 'absolute' akan menempatkannya di atas <a>
+              className="btn btn-ghost btn-sm btn-circle absolute top-1/2 -translate-y-1/2 right-2 z-10"
+              aria-label="Salin Link"
+            >
+              {copiedLinkId === link.id ? (
+                // Ikon Check
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-base-content/70" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
+              )}
+            </button>
           </li>
         ))}
       </ul>
@@ -279,17 +294,18 @@ export default function UserPage({ params }) {
           className="
             inline-flex items-center justify-center
             px-3 py-3
-            bg-gradient-to-r from-primary to-primary/90
-            hover:from-primary/90 hover:to-primary
-            text-neutral font-semibold
-            rounded-md
-            shadow-lg hover:shadow-xl
+            bg-secondary
+            font-semibold
+            rounded-full
+            hover:shadow-xl
             transform hover:scale-105
             transition-all duration-300 ease-out
             border-0
-            text-lg
-            w-100% max-w-xs
+            text-sm
+            w-auto max-w-xs
             group
+            btn
+            text-primary-content
           "
         >
           <span className="flex items-center gap-2">
@@ -301,11 +317,11 @@ export default function UserPage({ params }) {
         </Link>
 
         {/* Optional: Tambahkan teks penjelasan */}
-        <p className="text-sm text-neutral-500 mt-3">Buat halaman personalmu dalam 1 menit</p>
+        <p className="text-sm text-base-content/70 mt-3">Buat halaman personalmu dalam 1 menit</p>
       </div>
       {/* Footer Branding Link*/}
       <div className="text-center mt-10">
-        <Link href="/" className="text-xl text-primary-500 hover:text-primary">
+        <Link href="/" className="text-xl text-primary hover:text-primary-focus transition-colors">
           Powered by KumpuLink
         </Link>
       </div>

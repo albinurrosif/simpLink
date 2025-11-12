@@ -10,6 +10,8 @@ import { addDoc, collection, query, where, getDocs, doc, deleteDoc, updateDoc, g
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
+import ThemeSwitcher from '@/app/components/ThemeSwitcher';
+
 // Komponen Onboarding terpisah
 function OnboardingForm({ user, onUsernameSet }) {
   const [newUsername, setNewUsername] = useState('');
@@ -64,7 +66,7 @@ function OnboardingForm({ user, onUsernameSet }) {
 
   return (
     <main className="p-4 flex justify-center items-center">
-      <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-lg">
+      <div className="card w-full max-w-sm shrink-0 shadow-2xl bg-base-100 rounded-box">
         <form onSubmit={handleSubmit} className="card-body">
           <h1 className="text-2xl font-bold">Selamat Datang!</h1>
           <p className="text-base-content/70">Pilih username publik Anda untuk menyelesaikan setup.</p>
@@ -100,7 +102,7 @@ function OnboardingForm({ user, onUsernameSet }) {
           </div>
 
           <div className="form-control mt-6">
-            <button type="submit" className="btn rounded-lg btn-primary" disabled={loading}>
+            <button type="submit" className="btn rounded-field btn-primary" disabled={loading}>
               {loading ? <span className="loading loading-spinner loading-xs"></span> : 'Simpan dan Lanjutkan'}
             </button>
           </div>
@@ -142,7 +144,7 @@ export default function DashboardPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [linkToDelete, setLinkToDelete] = useState(null);
   const [showEditUsernameModal, setShowEditUsernameModal] = useState(false);
-  const [isUsernameSetupModal, setIsUsernameSetupModal] = useState(false); // Lacak modal setu
+  const [isUsernameSetupModal, setIsUsernameSetupModal] = useState(false); // Lacak modal setup
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // 🟢 UI FEEDBACK STATES
@@ -158,6 +160,7 @@ export default function DashboardPage() {
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
+          //data user
           setUserProfile(docSnap.data());
         } else {
           console.log('No such document!');
@@ -335,7 +338,7 @@ export default function DashboardPage() {
 
     // 1. validasi awal (panjang & karakter)
     const validUsernameRegex = /^[a-zA-Z0-9_\-]+$/;
-    if (newUsername < 1 || newUsername > 20) {
+    if (newUsername.length < 1 || newUsername.length > 20) {
       setAlertInfo({ type: 'error', message: 'Username harus 1-20 karakter.' });
       return;
     }
@@ -478,7 +481,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="p-4">
+    <main className="p-4 md:bg-base-300 card">
       {alertInfo && (
         <div role="alert" className={`alert ${alertInfo.type === 'error' ? 'alert-error' : 'alert-success'} mb-4 shadow-lg`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
@@ -492,7 +495,7 @@ export default function DashboardPage() {
         <div className="flex flex-row items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            {userProfile?.username && <p className="text-neutral-500 text-sm mt-1">Selamat Datang, @{userProfile.username}!</p>}
+            {userProfile?.username && <p className="text-base-content/70 text-sm mt-1">Selamat Datang, @{userProfile.username}!</p>}
           </div>
 
           {/* Tombol Lihat Halaman Publik*/}
@@ -500,7 +503,7 @@ export default function DashboardPage() {
             {userProfile?.username && (
               <Link
                 href={`/${userProfile.username}`}
-                className="btn btn-outline btn-primary btn-sm rounded-lg min-h-6 h-6 px-3 sm:px-4
+                className="btn btn-outline btn-primary btn-sm rounded-field min-h-6 h-6 px-3 sm:px-4
   text-xs sm:text-sm
   whitespace-nowrap
   flex-shrink-0"
@@ -514,12 +517,12 @@ export default function DashboardPage() {
 
         {/* Baris 2: URL Publik & Tombol Salin */}
         {userProfile?.username && (
-          <div className="bg-base-200 rounded-lg flex flex-col justify-between">
-            <div className="pl-4 pr-4 pt-4 bg-base-200 rounded-lg flex items-center justify-between gap-2">
+          <div className="bg-base-200 rounded-box flex flex-col justify-between">
+            <div className="pl-4 pr-4 pt-4 bg-base-200 rounded-box flex items-center justify-between gap-2">
               <div className="overflow-hidden">
                 <p className="text-sm font-medium">URL Publik Anda:</p>
 
-                <span className="text-primary font-mono text-sm break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/${userProfile.username}`}</span>
+                <span className="text-primary text-shadow-2xs font-mono text-sm break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/${userProfile.username}`}</span>
               </div>
               <div className="flex justify-between gap-2">
                 <button className="btn btn-sm btn-ghost btn-square text-info hover:bg-info hover:text-info-content  p-0" onClick={openEditUsernameModal} aria-label="Edit Username">
@@ -531,21 +534,25 @@ export default function DashboardPage() {
                     />
                   </svg>
                 </button>
-                <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-lg" onClick={copyToClipboard}>
+                <button className="btn btn-secondary btn-sm flex-shrink-0 rounded-field" onClick={copyToClipboard}>
                   {copySuccess ? 'Tersalin!' : 'Salin'}
                 </button>
               </div>
             </div>
-            <p className="pl-4 pr-4 pb-4 text-xs text-neutral-500 mt-1">Salin tautan ini dan tempelkan di bio media sosial Anda (Instagram, TikTok, dll).</p>
+            <p className="pl-4 pr-4 pb-4 text-xs text-base-content/70 mt-1">Salin tautan ini dan tempelkan di bio media sosial Anda (Instagram, TikTok, dll).</p>
           </div>
         )}
 
-        <fieldset className="border border-base-300 rounded-lg p-4 w-full min-w-0">
+        <fieldset className="border border-base-300 rounded-box p-4 w-full min-w-0">
           <legend className="px-2 text-sm font-medium">Bio anda:</legend>
           <textarea value={bio} onChange={(event) => setBio(event.target.value)} onBlur={handleSaveBio} className="textarea h-12 w-full" placeholder="Type something..."></textarea>
-          <div className="text-sm text-gray-500 mt-1">Opsional</div>
+          <div className="label-text-alt text-sm mt-1">Opsional</div>
         </fieldset>
       </div>
+
+      {/* theme changer */}
+
+      <ThemeSwitcher />
 
       <section className=" flex flex-col md:flex-row gap-6">
         <div className="card bg-base-100 shadow-2xl flex-1 md:order-1">
@@ -564,7 +571,7 @@ export default function DashboardPage() {
               <input type="url" placeholder="https://..." className="input  w-full" value={link} onChange={(event) => setLink(event.target.value)} />
             </div>
             <div className="form-control mt-6">
-              <button className="btn btn-primary w-full rounded-lg" type="submit" disabled={loadingForm}>
+              <button className="btn btn-primary w-full rounded-field" type="submit" disabled={loadingForm}>
                 {loadingForm ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>
@@ -575,7 +582,7 @@ export default function DashboardPage() {
           <div className="card-body">
             <h2 className="card-title mb-4">Link Anda</h2>
             {links.length === 0 ? (
-              <p className="text-center text-gray-500">Belum ada link. Tambahkan link baru di samping!</p>
+              <p className="text-center text-base-content/60">Belum ada link. Tambahkan link baru di samping!</p>
             ) : (
               <ul className="space-y-2">
                 {/* space-y untuk jarak */}
@@ -589,14 +596,14 @@ export default function DashboardPage() {
                       <a href={link.link} target="_blank" rel="noopener noreferrer" title={link.link} className="block w-full truncate font-medium text-primary hover:underline text-sm">
                         {link.name}
                       </a>
-                      <p className="block w-full truncate text-xs text-gray-500">{link.link}</p>
+                      <p className="block w-full truncate text-xs text-base-content/60">{link.link}</p>
                     </div>
 
                     <div className="flex space-x-1 flex-shrink-0">
                       {/* Tombol Edit dengan SVG dan Tooltip */}
                       <div className="tooltip" data-tip="Edit">
                         <button
-                          className="btn btn-sm btn-ghost btn-square text-accent hover:bg-accent hover:text-accent-content" // Warna bisa disesuaikan
+                          className="btn btn-sm btn-ghost btn-square text-warning hover:bg-accent hover:text-accent-content" // Warna bisa disesuaikan
                           onClick={() => openEditModal(link)}
                           aria-label="Edit"
                         >
@@ -671,11 +678,11 @@ export default function DashboardPage() {
               )}
 
               <div className="modal-action mt-6">
-                <button type="button" className="btn rounded-lg" onClick={() => setShowEditUsernameModal(false)} disabled={usernameCheckLoading}>
+                <button type="button" className="btn rounded-field" onClick={() => setShowEditUsernameModal(false)} disabled={usernameCheckLoading}>
                   Batal
                 </button>
 
-                <button type="submit" className="btn rounded-lg btn-primary" disabled={usernameCheckLoading}>
+                <button type="submit" className="btn rounded-field btn-primary" disabled={usernameCheckLoading}>
                   {usernameCheckLoading ? <span className="loading loading-spinner loading-xs"></span> : 'Simpan Username'}
                 </button>
               </div>
@@ -716,10 +723,10 @@ export default function DashboardPage() {
                 <input type="url" placeholder="https://..." className="input  w-full" value={editLink} onChange={(e) => setEditLink(e.target.value)} required />
               </div>
               <div className="modal-action">
-                <button type="button" className="btn rounded-lg" onClick={() => setShowEditModal(false)}>
+                <button type="button" className="btn rounded-field" onClick={() => setShowEditModal(false)}>
                   Batal
                 </button>
-                <button type="submit" className="btn btn-primary rounded-lg">
+                <button type="submit" className="btn btn-primary rounded-field">
                   Simpan Perubahan
                 </button>
               </div>
@@ -738,10 +745,10 @@ export default function DashboardPage() {
             <h3 className="font-bold text-lg">Konfirmasi Hapus</h3>
             <p className="py-4">Apakah Anda yakin ingin menghapus link ini?</p>
             <div className="modal-action">
-              <button className="btn rounded-lg" onClick={() => setShowDeleteModal(false)}>
+              <button className="btn rounded-field" onClick={() => setShowDeleteModal(false)}>
                 Batal
               </button>
-              <button className="btn btn-error rounded-lg" onClick={confirmDeleteLink}>
+              <button className="btn btn-error rounded-field" onClick={confirmDeleteLink}>
                 Ya, Hapus
               </button>
             </div>
