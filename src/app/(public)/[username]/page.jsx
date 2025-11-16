@@ -216,10 +216,11 @@ export default function UserPage({ params }) {
       </div>
     );
   }
+ 
   return (
-    <>
-      {/* Profile Section */}
-      <div className="flex flex-col items-center text-center pt-6 mb-6">
+
+      
+      <div className="w-full max-w-xs mx-auto  flex flex-col items-center text-center pt-8 mb-6">
         {loggedInUser && loggedInUser.uid === userProfile?.userId && (
           // Posisi absolut relatif terhadap div di atas
           <div className="absolute top-4 left-4 z-10 tooltip" data-tip="Edit Halaman">
@@ -257,41 +258,41 @@ export default function UserPage({ params }) {
         </div>
         <h1 className="text-4xl font-semibold text-base-content">{userProfile?.username}</h1>
         {userProfile?.bio && <p className="text-md text-base-content/80 mt-2 text-center max-w-xs">{userProfile.bio}</p>}
-      </div>
-      {/* Link Buttons Section */}
-      <ul className="w-full space-y-4 mt-2">
-        {links.map((link) => (
-          <li key={link.id} className="list-none w-full relative">
-            <a href={link.link} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block rounded-field text-lg normal-case flex justify-center items-center py-3 h-auto">
-              {link.name}
-            </a>
-            <button
-              onClick={(event) => handleShareOrCopy(event, link)}
-              // 'absolute' akan menempatkannya di atas <a>
-              className="btn btn-ghost btn-sm btn-circle absolute top-1/2 -translate-y-1/2 right-2 z-10"
-              aria-label="Salin Link"
-            >
-              {copiedLinkId === link.id ? (
-                // Ikon Check
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-base-content/70" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="5" r="2" />
-                  <circle cx="12" cy="12" r="2" />
-                  <circle cx="12" cy="19" r="2" />
-                </svg>
-              )}
-            </button>
-          </li>
-        ))}
-      </ul>
-      {/* IMPROVED CTA SECTION */}
-      <div className="text-center mt-18">
-        <Link
-          href="/"
-          className="
+
+        {/* Link Buttons Section */}
+        <ul className="w-full space-y-4 mt-2">
+          {links.map((link) => (
+            <li key={link.id} className="list-none w-full relative">
+              <a href={link.link} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block rounded-field text-lg normal-case flex justify-center items-center py-3 h-auto">
+                {link.name}
+              </a>
+              <button
+                onClick={(event) => handleShareOrCopy(event, link)}
+                // 'absolute' akan menempatkannya di atas <a>
+                className="btn btn-ghost btn-sm btn-circle absolute top-1/2 -translate-y-1/2 right-2 z-10"
+                aria-label="Salin Link"
+              >
+                {copiedLinkId === link.id ? (
+                  // Ikon Check
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-base-content/70" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+        {/* IMPROVED CTA SECTION */}
+        <div className="text-center mt-20">
+          <Link
+            href="/"
+            className="
             inline-flex items-center justify-center
             px-3 py-3
             bg-secondary
@@ -307,33 +308,34 @@ export default function UserPage({ params }) {
             btn
             text-primary-content
           "
-        >
-          <span className="flex items-center gap-2">
-            ✨ Buat Link Bio Gratis
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
-        </Link>
+          >
+            <span className="flex items-center gap-2">
+              ✨ Buat Link Bio Gratis
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
+          </Link>
 
-        {/* Optional: Tambahkan teks penjelasan */}
-        <p className="text-sm text-base-content/70 mt-3">Buat halaman personalmu dalam 1 menit</p>
-      </div>
-      {/* Footer Branding Link*/}
-      <div className="text-center mt-10">
-        <Link href="/" className="text-xl text-primary hover:text-primary-focus transition-colors">
-          Powered by KumpuLink
-        </Link>
-      </div>
-      <div className="toast toast-top toast-center z-20">
-        {toastMessage && (
-          <div className="alert alert-success shadow-lg">
-            <div>
-              <span>{toastMessage}</span>
+          {/* Optional: Tambahkan teks penjelasan */}
+          <p className="text-sm text-base-content/70 mt-3">Buat halaman personalmu dalam 1 menit</p>
+        </div>
+        {/* Footer Branding Link*/}
+        <div className="text-center mt-10">
+          <Link href="/" className="text-xl text-primary hover:text-primary-focus transition-colors">
+            Powered by KumpuLink
+          </Link>
+        </div>
+        <div className="toast toast-top toast-center z-20">
+          {toastMessage && (
+            <div className="alert alert-success shadow-lg">
+              <div>
+                <span>{toastMessage}</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </>
+   
   );
 }
