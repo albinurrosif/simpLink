@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 KumpuLink
 
-## Getting Started
+KumpuLink is a high-performance, full-stack Link-in-Bio platform that allows users to create a personalized landing page for all their important links. Built with **Next.js**, **PostgreSQL**, and **TypeScript**, it offers a seamless experience for both profile owners and visitors.
 
-First, run the development server:
+## 🛠 The Evolution: From Firebase to PostgreSQL
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Originally built using Firebase (Auth & Firestore), KumpuLink has undergone a major architectural refactor to a **Custom Fullstack Architecture**. This migration was driven by the need for better data relational control, advanced analytics, and professional-grade performance.
+
+### Key Changes:
+
+- **Database**: Migrated from NoSQL (Firestore) to Relational (PostgreSQL).
+- **Authentication**: Replaced Firebase Auth with a custom JWT-based system using HTTP-only cookies for enhanced security.
+- **Architecture**: Implemented a **Service-Repository Pattern** to decouple business logic from data access.
+
+## ✨ Core Features
+
+- **Dynamic Theme System**: Choose from 35+ themes (Cyberpunk, Retro, Dracula, etc.) powered by DaisyUI. Themes are applied instantly across the dashboard and public profile.
+- **Real-time Analytics**: Built-in tracking system that records link clicks with metadata (IP Address & User Agent) while filtering out local/internal traffic.
+- **SEO & Performance**: Optimized using Next.js Server Components for lightning-fast page loads and better search engine indexing.
+- **Drag & Drop Reordering**: Intuitively organize links with an "Optimistic UI" approach for zero-latency feedback.
+- **Responsive Profile**: A clean, mobile-first design that looks great on any device.
+
+## 🏗 Project Structure
+
+The project follows a modular structure for maintainability:
+
+```text
+src/
+├── app/                  # Next.js App Router (Pages & API Routes)
+├── components/           # Reusable UI Components (Navbar, Modals, etc.)
+├── context/              # Frontend state management (Auth Context)
+├── lib/
+│   ├── modules/          # Business Logic (User, Link, Analytics modules)
+│   │   ├── user/         # User repository & service logic
+│   │   ├── link/         # Link management logic
+│   │   └── analytics/    # View recording & reporting
+│   └── shared/           # Shared utilities (DB Connection, Query Builder)
+├── types/                # Strict TypeScript definitions
+└── styles/               # Global CSS & Tailwind configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [DaisyUI](https://daisyui.com/)
+- **Security**: JWT (JSON Web Tokens) & Jose
+- **Icons**: Lucide React / Heroicons
+- **Deployment**: [Vercel](https://vercel.com/)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ⚙️ Local Development
 
-## Learn More
+1. **Clone the repository**:
+   ```bash
+   git clone [https://github.com/yourusername/kumpulink.git](https://github.com/yourusername/kumpulink.git)
+   ```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Set up Environment Variables**:
+   Create a `.env` file in the root directory:
 
-To learn more about Next.js, take a look at the following resources:
+   ```env
+   POSTGRES_URL=your_postgresql_connection_string
+   JWT_SECRET=your_random_secure_string
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📊 Database Schema
 
-## Deploy on Vercel
+The system architecture relies on three core relational tables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- users: Stores credentials, profile metadata, and theme preferences.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- links: Stores URL data, active status, and display order.
+
+- link_views: Log table for analytics, tracking every unique click on a user's link.
+
+---
+## 👨‍💻 Author
+
+**Albi Nur Rosif**
+- [Portfolio](https://albinur.vercel.app/) | [LinkedIn](https://www.linkedin.com/in/albinurrosif/)
+
+---
+_© 2026 PreApply._
