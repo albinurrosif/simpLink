@@ -10,8 +10,7 @@ import Footer from '../components/Footer'; // Kita bisa pakai ulang Footer yang 
 export default function LandingLayout({ children }) {
   return (
     <div className="flex flex-col min-h-screen antialiased">
-      <Navbar />
-      {/* TAMBAHKAN 'flex-grow' di main agar 'children' (hero) bisa mengisi sisa ruang */}
+      {/* <Navbar /> */}
       <main className="flex-grow flex flex-col">
         {children}
       </main>
