@@ -90,4 +90,3 @@ The system architecture relies on three core relational tables:
 - [Portfolio](https://albinur.vercel.app/) | [LinkedIn](https://www.linkedin.com/in/albinurrosif/)
 
 ---
-_© 2026 PreApply._
